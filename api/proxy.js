@@ -98,7 +98,7 @@ export default async function handler(req, res) {
           const cacheKey = generateCacheKey(targetUrl, payload);
           const cachedData = getCache(cacheKey);
           if (cachedData) {
-              return res.status(200).json(cachedData);
+              return res.status(200).json({ ...cachedData, hit_cache: true });
           }
 
           const json = JSON.parse(raw);
@@ -107,7 +107,7 @@ export default async function handler(req, res) {
           // Set cache if data is valid
           setCache(cacheKey, extracted);
           
-          return res.status(response.status).json(extracted);
+          return res.status(response.status).json({ ...extracted, hit_cache: false });
       } catch (e) {
           console.error("Extraction failed", e);
       }

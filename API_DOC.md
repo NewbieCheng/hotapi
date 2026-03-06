@@ -73,6 +73,7 @@ export interface DouyinSearchRequest {
 {
   "code": 200,
   "message": "success",
+  "hit_cache": false, // 是否命中缓存
   "data": [
     {
       "account_name": "账号昵称",
@@ -135,6 +136,7 @@ export interface XhsSearchRequest {
 {
   "code": 200,
   "message": "success",
+  "hit_cache": false, // 是否命中缓存
   "data": [
     {
       "account_name": "账号昵称",
