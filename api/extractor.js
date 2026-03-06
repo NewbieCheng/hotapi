@@ -24,7 +24,6 @@ function extractXhsData(data) {
       // 提取通用字段
       const common = {
         account_name: note.user?.nickname, // 账号名
-        author_link: note.user?.userid ? `https://www.xiaohongshu.com/user/profile/${note.user.userid}` : '', // 作者主页链接
         publish_time: note.timestamp,      // 发布时间
         title: note.title || '',           // 标题
         original_link: `https://www.xiaohongshu.com/explore/${note.id}`, // 原文链接
@@ -92,7 +91,6 @@ function extractDyData(data) {
       // 提取通用字段
       const common = {
         account_name: note.author?.nickname, // 账号名
-        author_link: note.author?.sec_uid ? `https://www.douyin.com/user/${note.author.sec_uid}` : '', // 作者主页链接
         publish_time: note.create_time,      // 发布时间
         title: note.desc || '',              // 标题（抖音通常使用描述作为标题）
         original_link: `https://www.douyin.com/video/${note.aweme_id}`, // 原文链接

@@ -70,7 +70,6 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">响应结果</h5>
                     <div>
-                        <span id="cacheBadge" class="badge bg-info status-badge" style="display: none;">来自缓存</span>
                         <span id="statusBadge" class="badge status-badge"></span>
                         <span id="timeBadge" class="badge bg-secondary status-badge"></span>
                     </div>
@@ -92,7 +91,6 @@
     const resultCard = document.getElementById('resultCard');
     const jsonResult = document.getElementById('jsonResult');
     const statusBadge = document.getElementById('statusBadge');
-    const cacheBadge = document.getElementById('cacheBadge');
     const timeBadge = document.getElementById('timeBadge');
 
     // 监听预设切换
@@ -106,9 +104,9 @@
 
     // 发送请求
     sendBtn.addEventListener('click', async () => {
-        const proxyBaseUrl = proxyUrlInput.value.trim().replace(/\/$/, ''); // 移除末尾斜杠
+        const proxyUrl = proxyUrlInput.value.trim();
         const token = tokenInput.value.trim();
-        const path = apiPathInput.value.trim().startsWith('/') ? apiPathInput.value.trim() : `/${apiPathInput.value.trim()}`;
+        const path = apiPathInput.value.trim();
         let body;
 
         try {
@@ -125,21 +123,24 @@
         jsonResult.textContent = '请求中...';
         statusBadge.className = 'badge bg-warning status-badge';
         statusBadge.textContent = 'Pending';
-        cacheBadge.style.display = 'none';
 
         const startTime = Date.now();
 
         try {
-            // 使用统一入口模式：将 path 拼接到代理地址后
-            const fullTargetUrl = `${proxyBaseUrl}${path}`;
-            
-            const response = await fetch(fullTargetUrl, {
+            const response = await fetch(proxyUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(body)
+                body: JSON.stringify({
+                    path: path,
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: body
+                })
             });
 
             const duration = Date.now() - startTime;
@@ -147,12 +148,6 @@
 
             // 更新结果
             timeBadge.textContent = `${duration}ms`;
-            
-            // 显示缓存状态
-            if (data._cached) {
-                cacheBadge.style.display = 'inline-block';
-            }
-
             if (response.ok) {
                 statusBadge.className = 'badge bg-success status-badge';
                 statusBadge.textContent = `Status: ${response.status}`;
