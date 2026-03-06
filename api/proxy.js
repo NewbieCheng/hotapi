@@ -89,11 +89,20 @@ export default async function handler(req, res) {
   }
 
   const raw = await response.text();
+  console.log("Raw response from upstream:", raw);
 
   // Intercept and extract data based on strategies
   if (shouldIntercept(targetUrl)) {
       try {
           const json = JSON.parse(raw);
+          
+          // 如果上游返回 code 为 0 或不为 200 (取决于上游约定)，且没有成功数据，直接返回原始数据
+          const isError = (json.code === 0 || (json.code !== undefined && json.code !== 200 && json.code !== 0)) && !json.data;
+          
+          if (isError) {
+              return res.status(response.status).json(json);
+          }
+
           const extracted = extractData(targetUrl, json);
           return res.status(response.status).json(extracted);
       } catch (e) {
