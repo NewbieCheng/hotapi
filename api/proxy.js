@@ -14,7 +14,8 @@ const HOP_BY_HOP_HEADERS = new Set([
   "trailer",
   "transfer-encoding",
   "upgrade",
-  "content-length"
+  "content-length",
+  "content-encoding"
 ]);
 
 function setCors(res) {
