@@ -1,18 +1,16 @@
 {
-  "name": "dailyhot-api-vercel",
+  "name": "resource-search-proxy",
   "version": "1.0.0",
-  "description": "An Api on Today's Hot list",
+  "description": "Resource search API proxy on Vercel",
   "type": "module",
   "license": "MIT",
-  "author": "imsyy",
+  "author": "chase",
   "main": "index.js",
   "scripts": {
     "build": "node index.js",
     "build:vercel": "vercel"
   },
-  "dependencies": {
-    "dailyhot-api": "^2.0.6"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@vercel/node": "^3.2.23",
     "vercel": "^34.2.8"
