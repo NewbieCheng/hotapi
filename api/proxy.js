@@ -1,3 +1,5 @@
+import { extractData, shouldIntercept } from './extractor.js';
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
@@ -86,12 +88,24 @@ export default async function handler(req, res) {
     return res.status(502).json({ message: "Upstream request failed" });
   }
 
+  const raw = await response.text();
+
+  // Intercept and extract data based on strategies
+  if (shouldIntercept(targetUrl)) {
+      try {
+          const json = JSON.parse(raw);
+          const extracted = extractData(targetUrl, json);
+          return res.status(response.status).json(extracted);
+      } catch (e) {
+          console.error("Extraction failed", e);
+      }
+  }
+
   response.headers.forEach((value, key) => {
     if (!HOP_BY_HOP_HEADERS.has(key.toLowerCase())) {
       res.setHeader(key, value);
     }
   });
 
-  const raw = await response.text();
   return res.status(response.status).send(raw);
 }

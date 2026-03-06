@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接口中转站调试工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding-top: 50px; }
+        .card { border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .json-viewer { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 8px; max-height: 600px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; font-family: 'Courier New', Courier, monospace; }
+        .status-badge { font-size: 0.9rem; padding: 5px 12px; }
+        .loading-spinner { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card p-4 mb-4">
+                <h3 class="text-center mb-4">接口中转站调试工具 🚀</h3>
+                
+                <div class="row g-3">
+                    <!-- 中转地址 -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">中转站地址</label>
+                        <input type="text" id="proxyUrl" class="form-control" value="https://abc.no996ai.cn/api/proxy" placeholder="https://abc.no996ai.cn/api/proxy">
+                    </div>
+
+                    <!-- Token -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Authorization Token</label>
+                        <input type="text" id="token" class="form-control" placeholder="Bearer YOUR_TOKEN">
+                    </div>
+
+                    <!-- 接口选择 -->
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">选择预设接口</label>
+                        <select id="apiPreset" class="form-select">
+                            <option value="xhs" data-path="/api/xiaohongshu/search_note_v3" data-body='{"keyword":"美食","page":1,"page_size":20,"sort":"general"}'>小红书搜索笔记 (search_note_v3)</option>
+                            <option value="dy" data-path="/api/douyin/search_general_v3" data-body='{"keyword":"伊朗","cursor":0}'>抖音综合搜索 (search_general_v3)</option>
+                            <option value="custom">自定义路径 (不解析直接转发)</option>
+                        </select>
+                    </div>
+
+                    <!-- 路径 -->
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">请求路径 (path)</label>
+                        <input type="text" id="apiPath" class="form-control" value="/api/xiaohongshu/search_note_v3">
+                    </div>
+
+                    <!-- 请求体 -->
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">请求体 (body JSON)</label>
+                        <textarea id="apiBody" class="form-control" rows="5">{"keyword":"美食","page":1,"page_size":20,"sort":"general"}</textarea>
+                    </div>
+
+                    <div class="col-md-12 text-center mt-4">
+                        <button id="sendBtn" class="btn btn-primary btn-lg px-5">
+                            <span class="spinner-border spinner-border-sm loading-spinner" id="btnSpinner"></span>
+                            发送请求
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果展示 -->
+            <div class="card p-4" id="resultCard" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">响应结果</h5>
+                    <div>
+                        <span id="statusBadge" class="badge status-badge"></span>
+                        <span id="timeBadge" class="badge bg-secondary status-badge"></span>
+                    </div>
+                </div>
+                <div id="jsonResult" class="json-viewer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const proxyUrlInput = document.getElementById('proxyUrl');
+    const tokenInput = document.getElementById('token');
+    const apiPreset = document.getElementById('apiPreset');
+    const apiPathInput = document.getElementById('apiPath');
+    const apiBodyInput = document.getElementById('apiBody');
+    const sendBtn = document.getElementById('sendBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const resultCard = document.getElementById('resultCard');
+    const jsonResult = document.getElementById('jsonResult');
+    const statusBadge = document.getElementById('statusBadge');
+    const timeBadge = document.getElementById('timeBadge');
+
+    // 监听预设切换
+    apiPreset.addEventListener('change', () => {
+        const selected = apiPreset.options[apiPreset.selectedIndex];
+        if (selected.value !== 'custom') {
+            apiPathInput.value = selected.getAttribute('data-path');
+            apiBodyInput.value = selected.getAttribute('data-body');
+        }
+    });
+
+    // 发送请求
+    sendBtn.addEventListener('click', async () => {
+        const proxyUrl = proxyUrlInput.value.trim();
+        const token = tokenInput.value.trim();
+        const path = apiPathInput.value.trim();
+        let body;
+
+        try {
+            body = JSON.parse(apiBodyInput.value);
+        } catch (e) {
+            alert('请求体 JSON 格式错误');
+            return;
+        }
+
+        // UI 状态
+        sendBtn.disabled = true;
+        btnSpinner.style.display = 'inline-block';
+        resultCard.style.display = 'block';
+        jsonResult.textContent = '请求中...';
+        statusBadge.className = 'badge bg-warning status-badge';
+        statusBadge.textContent = 'Pending';
+
+        const startTime = Date.now();
+
+        try {
+            const response = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    path: path,
+                    method: 'POST',
+                    headers: {
+                        'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: body
+                })
+            });
+
+            const duration = Date.now() - startTime;
+            const data = await response.json();
+
+            // 更新结果
+            timeBadge.textContent = `${duration}ms`;
+            if (response.ok) {
+                statusBadge.className = 'badge bg-success status-badge';
+                statusBadge.textContent = `Status: ${response.status}`;
+            } else {
+                statusBadge.className = 'badge bg-danger status-badge';
+                statusBadge.textContent = `Status: ${response.status}`;
+            }
+
+            jsonResult.textContent = JSON.stringify(data, null, 4);
+        } catch (error) {
+            statusBadge.className = 'badge bg-danger status-badge';
+            statusBadge.textContent = 'Error';
+            jsonResult.textContent = `请求失败: ${error.message}`;
+        } finally {
+            sendBtn.disabled = false;
+            btnSpinner.style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>
