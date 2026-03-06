@@ -1,4 +1,5 @@
 import { extractData, shouldIntercept } from './extractor.js';
+import { generateCacheKey, getCache, setCache } from './cache_system.js';
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -93,8 +94,19 @@ export default async function handler(req, res) {
   // Intercept and extract data based on strategies
   if (shouldIntercept(targetUrl)) {
       try {
+          // Try to get from cache first (using original request body/url)
+          const cacheKey = generateCacheKey(targetUrl, payload);
+          const cachedData = getCache(cacheKey);
+          if (cachedData) {
+              return res.status(200).json(cachedData);
+          }
+
           const json = JSON.parse(raw);
           const extracted = extractData(targetUrl, json);
+          
+          // Set cache if data is valid
+          setCache(cacheKey, extracted);
+          
           return res.status(response.status).json(extracted);
       } catch (e) {
           console.error("Extraction failed", e);
