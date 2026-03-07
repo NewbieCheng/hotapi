@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       try {
           // Try to get from cache first (using original request body/url)
           const cacheKey = generateCacheKey(targetUrl, payload);
-          const cachedData = getCache(cacheKey);
+          const cachedData = await getCache(cacheKey);
           if (cachedData) {
               return res.status(200).json({ ...cachedData, hit_cache: true });
           }
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
           const extracted = extractData(targetUrl, json);
           
           // Set cache if data is valid
-          setCache(cacheKey, extracted);
+          await setCache(cacheKey, extracted);
           
           return res.status(response.status).json({ ...extracted, hit_cache: false });
       } catch (e) {

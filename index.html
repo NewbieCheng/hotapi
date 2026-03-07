@@ -25,7 +25,7 @@
                     <!-- 中转地址 -->
                     <div class="col-md-6">
                         <label class="form-label fw-bold">中转站地址</label>
-                        <input type="text" id="proxyUrl" class="form-control" value="https://abc.no996ai.cn/api/proxy" placeholder="https://abc.no996ai.cn/api/proxy">
+                        <input type="text" id="proxyUrl" class="form-control" value="http://localhost:3000/api/proxy" placeholder="http://localhost:3000/api/proxy">
                     </div>
 
                     <!-- Token -->
@@ -69,7 +69,8 @@
             <div class="card p-4" id="resultCard" style="display: none;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">响应结果</h5>
-                    <div>
+                    <div class="d-flex gap-2">
+                        <span id="cacheBadge" class="badge bg-info status-badge" style="display: none;">Cache Hit</span>
                         <span id="statusBadge" class="badge status-badge"></span>
                         <span id="timeBadge" class="badge bg-secondary status-badge"></span>
                     </div>
@@ -89,6 +90,7 @@
     const sendBtn = document.getElementById('sendBtn');
     const btnSpinner = document.getElementById('btnSpinner');
     const resultCard = document.getElementById('resultCard');
+    const cacheBadge = document.getElementById('cacheBadge');
     const jsonResult = document.getElementById('jsonResult');
     const statusBadge = document.getElementById('statusBadge');
     const timeBadge = document.getElementById('timeBadge');
@@ -120,6 +122,7 @@
         sendBtn.disabled = true;
         btnSpinner.style.display = 'inline-block';
         resultCard.style.display = 'block';
+        cacheBadge.style.display = 'none';
         jsonResult.textContent = '请求中...';
         statusBadge.className = 'badge bg-warning status-badge';
         statusBadge.textContent = 'Pending';
@@ -148,6 +151,9 @@
 
             // 更新结果
             timeBadge.textContent = `${duration}ms`;
+            if (data.hit_cache) {
+                cacheBadge.style.display = 'inline-block';
+            }
             if (response.ok) {
                 statusBadge.className = 'badge bg-success status-badge';
                 statusBadge.textContent = `Status: ${response.status}`;

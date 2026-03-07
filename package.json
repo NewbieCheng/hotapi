@@ -10,7 +10,12 @@
     "build": "node index.js",
     "build:vercel": "vercel"
   },
-  "dependencies": {},
+  "dependencies": {
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "ioredis": "^5.10.0"
+  },
   "devDependencies": {
     "@vercel/node": "^3.2.23",
     "vercel": "^34.2.8"
