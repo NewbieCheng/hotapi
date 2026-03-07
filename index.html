@@ -95,6 +95,9 @@
     const statusBadge = document.getElementById('statusBadge');
     const timeBadge = document.getElementById('timeBadge');
 
+    // 自动设置当前域名的 API 地址
+    proxyUrlInput.value = `${window.location.origin}/api/proxy`;
+
     // 监听预设切换
     apiPreset.addEventListener('change', () => {
         const selected = apiPreset.options[apiPreset.selectedIndex];
