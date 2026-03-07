@@ -12,13 +12,6 @@ local-server.js
 .idea
 .DS_Store
 .git
-.gitignore
-.gitmodules
-.gitlab-ci.yml
-.hg
-.hgignore
-.hgcheck
-.svn
 .lock-wscript
 .wafpickle-*
 *.sublime-project
