@@ -2,12 +2,39 @@
 
 本文档描述了中转站支持的特定解析接口。对于其他接口，中转站将直接转发原始响应。
 
+# curl 请求示例
+curl ^"https://abc.no996ai.cn/api/proxy^" ^
+  -H ^"accept: */*^" ^
+  -H ^"accept-language: zh-CN,zh;q=0.9^" ^
+  -H ^"cache-control: no-cache^" ^
+  -H ^"content-type: application/json^" ^
+  -H ^"origin: https://abc.no996ai.cn^" ^
+  -H ^"pragma: no-cache^" ^
+  -H ^"priority: u=1, i^" ^
+  -H ^"referer: https://abc.no996ai.cn/test^" ^
+  -H ^"sec-ch-ua: ^\^"Not:A-Brand^\^";v=^\^"99^\^", ^\^"Google Chrome^\^";v=^\^"145^\^", ^\^"Chromium^\^";v=^\^"145^\^"^" ^
+  -H ^"sec-ch-ua-mobile: ?0^" ^
+  -H ^"sec-ch-ua-platform: ^\^"Windows^\^"^" ^
+  -H ^"sec-fetch-dest: empty^" ^
+  -H ^"sec-fetch-mode: cors^" ^
+  -H ^"sec-fetch-site: same-origin^" ^
+  -H ^"user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36^" ^
+  --data-raw ^"^{^\^"path^\^":^\^"/api/douyin/search_general_v3^\^",^\^"method^\^":^\^"POST^\^",^\^"headers^\^":^{^\^"Authorization^\^":^\^"Bearer nDYzjfbvUwrarScn2s5HSoOC2lHORqOnZyD8DA9GlP1cJ9kaLRDptk6OjbBWkppS^\^",^\^"Content-Type^\^":^\^"application/json^\^"^},^\^"body^\^":^{
+    "keyword": "搜索词",
+    "sort_type": 0,
+    "publish_time": 0,
+    "content_type": 0,
+    "filter_duration": 0,
+    "cursor": "0",
+    "backtrace": ""
+  }"^{^\^"^}"
+
 ## 基础信息
 
-- **中转地址**: `https://abc.no996ai.cn/`
+- **中转地址**: `https://abc.no996ai.cn/api/proxy`
 - **请求方式**: POST
 - **通用参数**:
-  - `path`: 目标接口路径 (例如 `api/douyin/search_general_v3`)
+  - `path`: 目标接口路径 (例如 `/api/douyin/search_general_v3`)
   - `method`: 请求方法 (通常为 `POST` 或 `GET`)
   - `headers`: 请求头 (必填，需包含 `Authorization` 令牌)
   - `body`: 请求体 (JSON 对象)
@@ -16,7 +43,7 @@
 
 ```json
 {
-  "path": "api/douyin/search_general_v3",
+  "path": "/api/douyin/search_general_v3",
   "method": "POST",
   "headers": {
     "Authorization": "Bearer YOUR_TOKEN",
@@ -38,7 +65,7 @@
 
 ## 1. 抖音搜索解析
 
-**接口路径**: `api/douyin/search_general_v3`
+**接口路径**: `/api/douyin/search_general_v3`
 
 ### 输入参数 (Body)
 
@@ -49,13 +76,13 @@ export interface DouyinSearchRequest {
     /** 关键词 */
     keyword: string;
     /** 排序: 0=综合, 1=最新, 2=最热 */
-    sort_type: 0 | 1 | 2;
+    sort_type: string;
     /** 发布时间: 0=不限, 1=一天内, 7=一周内, 180=半年内 */
-    publish_time: 0 | 1 | 7 | 180;
+    publish_time: string;
     /** 内容形式: 0=全部, 1=视频, 2=图文 */
-    content_type: 0 | 1 | 2;
+    content_type: string;
     /** 视频时长: 0=不限, 1=1分钟内, 2=1-5分钟, 3=5分钟以上 */
-    filter_duration: 0 | 1 | 2 | 3;
+    filter_duration: string;
     /** 翻页参数，首次请求传 0 */
     cursor: string;
     /** 翻页回溯标识，首次传空 */
@@ -77,6 +104,7 @@ export interface DouyinSearchRequest {
   "data": [
     {
       "account_name": "账号昵称",
+      "avatar": "https://...", // 作者头像链接
       "author_link": "https://www.douyin.com/user/...", // 作者主页链接
       "publish_time": 1712345678, // 发布时间戳
       "title": "视频标题/描述",
@@ -103,7 +131,7 @@ export interface DouyinSearchRequest {
 
 ## 2. 小红书搜索解析
 
-**接口路径**: `api/xiaohongshu/search_note_v3`
+**接口路径**: `/api/xiaohongshu/search_note_v3`
 
 ### 输入参数 (Body)
 
@@ -140,6 +168,7 @@ export interface XhsSearchRequest {
   "data": [
     {
       "account_name": "账号昵称",
+      "avatar": "https://...", // 作者头像链接
       "author_link": "https://www.xiaohongshu.com/user/profile/...", // 作者主页链接
       "publish_time": 1712345678000, // 发布时间戳 (毫秒)
       "title": "笔记标题",
