@@ -77,7 +77,7 @@
         .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
 
         /* 主界面 */
-        #adminSection { display: none; max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        #adminSection { display: none; max-width: 1600px; margin: 0 auto; padding: 40px 20px; }
 
         .navbar { 
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;
@@ -96,19 +96,278 @@
         .stat-info h3 { font-size: 14px; color: var(--muted); margin-bottom: 4px; }
         .stat-info p { font-size: 24px; font-weight: 700; }
 
-        .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
+        .main-grid { 
+            display: grid; 
+            grid-template-columns: 350px 1fr; 
+            gap: 30px; 
+            transition: all 0.3s ease;
+        }
+
+        /* 侧边栏收缩逻辑 */
+        .main-grid.sidebar-collapsed {
+            grid-template-columns: 80px 1fr;
+        }
+        
+        .main-grid.sidebar-collapsed #generatePanel {
+            padding: 15px 10px;
+            overflow: hidden;
+            width: 80px;
+        }
+        
+        .main-grid.sidebar-collapsed #generatePanel .panel-header h2,
+        .main-grid.sidebar-collapsed #generatePanel .panel-content {
+            display: none;
+        }
+        
+        .main-grid.sidebar-collapsed #generatePanel .panel-header {
+            justify-content: center;
+        }
+        
+        .main-grid.sidebar-collapsed #generatePanel .toggle-sidebar-btn i {
+            transform: rotate(180deg);
+        }
+
+        /* 收缩后激活码面板居中并显示更多内容 */
+        .main-grid.sidebar-collapsed .panel:last-child {
+            max-width: 1400px;
+            justify-self: center;
+            width: 100%;
+        }
+
+        /* PC 模式下隐藏 generatePanel 的垂直折叠按钮 */
+        @media (min-width: 1025px) {
+            #generatePanel .collapse-icon {
+                display: none !important;
+            }
+            #generatePanel .panel-header {
+                cursor: default;
+            }
+        }
+
+        .filter-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            max-height: 500px;
+            opacity: 1;
+            margin-bottom: 25px;
+        }
+
+        .filter-bar.collapsed {
+            max-height: 0;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            border-color: transparent;
+            pointer-events: none;
+        }
+
+        .filter-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1024px) {
+            .filter-header {
+                display: flex;
+            }
+        }
+
+        .filter-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            width: 100%;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .filter-input:focus {
+            border-color: var(--primary);
+            background: rgba(15, 23, 42, 0.8);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+        }
+
+        .query-btn {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 10px;
+            gap: 4px;
+        }
+
+        .view-toggle-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        /* 卡片模式样式 (通用) */
+        .card-view-active table, 
+        .card-view-active thead, 
+        .card-view-active tbody, 
+        .card-view-active th, 
+        .card-view-active td, 
+        .card-view-active tr { 
+            display: block; 
+        }
+        
+        .card-view-active thead tr { 
+            position: absolute; 
+            top: -9999px; 
+            left: -9999px; 
+        }
+        
+        .card-view-active .table-container { 
+            margin: 0; 
+            padding: 0; 
+            overflow: visible; 
+        }
+        
+        .card-view-active tr { 
+            background: rgba(255, 255, 255, 0.03); 
+            margin-bottom: 15px; 
+            border-radius: 16px; 
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card-view-active tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .card-view-active tr.selected {
+            border-color: var(--primary);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .card-view-active tr.selected::after {
+            content: '\f058';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: var(--primary);
+            font-size: 16px;
+        }
+        
+        .card-view-active td { 
+            border: none !important; 
+            padding: 8px 0 !important; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            text-align: right;
+            background: transparent !important;
+            border-radius: 0 !important;
+        }
+        
+        .card-view-active td::before { 
+            content: attr(data-label); 
+            font-weight: 600; 
+            color: var(--muted); 
+            font-size: 11px;
+            text-align: left;
+            min-width: 70px;
+        }
+
+        .card-view-active td[data-label="选择"] { display: none; }
+        .card-view-active td[data-label="操作"] { 
+            border-top: 1px solid rgba(255,255,255,0.05) !important; 
+            margin-top: 8px; 
+            padding-top: 10px !important; 
+        }
+        
+        .card-view-active .code-wrapper { justify-content: flex-end; }
+        .card-view-active .key-code { max-width: 180px; text-align: right; font-size: 11px; }
+        .card-view-active .device-code { max-width: 180px; text-align: right; font-size: 10px; }
+
+        /* PC 端卡片网格支持 */
+        @media (min-width: 1025px) {
+            .card-view-active tbody {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+                gap: 15px;
+            }
+            .card-view-active tr {
+                margin-bottom: 0;
+            }
+        }
 
         .panel { 
             background: var(--glass); padding: 25px; border-radius: 24px; 
             border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px);
+            position: relative;
         }
-        .panel h2 { font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .panel h2 { font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
         .panel h2 i { color: var(--primary); }
         .panel-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .panel-content { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; max-height: 500px; opacity: 1; }
+        .panel-content { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; max-height: 800px; opacity: 1; }
         .panel.collapsed .panel-content { max-height: 0; margin: 0; opacity: 0; transform: translateY(-10px); }
         .collapse-icon { transition: transform 0.3s; color: var(--muted); }
         .collapsed .collapse-icon { transform: rotate(-180deg); }
+
+        .toggle-sidebar-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            z-index: 10;
+        }
+        .main-grid.sidebar-collapsed .toggle-sidebar-btn {
+            right: 50%;
+            transform: translateX(50%);
+        }
 
         .form-label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--muted); font-weight: 500; }
         
@@ -127,16 +386,43 @@
         }
 
         /* 表格样式 */
-        .table-container { overflow-x: auto; }
+        .table-container { overflow-x: auto; min-height: 400px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         th { text-align: left; padding: 15px; color: var(--muted); font-weight: 500; font-size: 13px; }
         td { padding: 15px; background: rgba(255, 255, 255, 0.03); border-top: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         td:first-child { border-left: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px 0 0 12px; }
         td:last-child { border-right: 1px solid rgba(255, 255, 255, 0.05); border-radius: 0 12px 12px 0; }
 
+        .code-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: inherit;
+        }
+
         .key-code { 
             font-family: 'JetBrains Mono', monospace; background: rgba(16, 185, 129, 0.1); 
             color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 13px;
+            word-break: break-all; line-height: 1.4;
+        }
+        
+        .device-code {
+            font-family: 'JetBrains Mono', monospace; background: rgba(59, 130, 246, 0.08); 
+            color: #94a3b8; padding: 4px 8px; border-radius: 6px; font-size: 11px;
+            word-break: break-all; line-height: 1.4; max-width: 250px;
+        }
+
+        .action-btn.mini {
+            padding: 6px 10px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
@@ -149,6 +435,74 @@
         }
         .action-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
         .action-btn.delete:hover { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+        
+        /* 批量操作栏中的选择控制按钮 */
+        .selection-controls {
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3px;
+            border-radius: 8px;
+        }
+
+        .selection-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .selection-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .batch-action-bar {
+            position: sticky;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--primary);
+            padding: 10px 20px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            backdrop-filter: blur(12px);
+            z-index: 100;
+            margin-top: 20px;
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .batch-action-bar.show { height: 60px; opacity: 1; margin-bottom: 20px; }
+
+        /* 分页控件 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+        }
+        
+        .page-controls { display: flex; gap: 10px; align-items: center; }
+        .page-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+        }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-info { font-size: 13px; color: var(--muted); }
 
         .logout-btn { 
             background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2);
@@ -166,6 +520,8 @@
         @media (max-width: 1024px) {
             .main-grid { grid-template-columns: 1fr; }
             #adminSection { padding: 20px 15px; }
+            .toggle-sidebar-btn { display: none; } /* 移动端不需要收缩侧边栏 */
+            .main-grid.sidebar-collapsed { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 768px) {
@@ -173,7 +529,6 @@
             .nav-logo { font-size: 16px; }
             .logout-btn { padding: 6px 12px; font-size: 13px; }
             
-            /* 手机端 3 个卡片排成一行 */
             .stats-grid { 
                 grid-template-columns: repeat(3, 1fr); 
                 gap: 8px; 
@@ -197,16 +552,20 @@
             
             .login-card { padding: 30px 20px; width: 90%; }
             .login-card h1 { font-size: 20px; }
+
+            .filter-bar {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 12px;
+            }
             
-            th, td { padding: 12px 10px; font-size: 12px; }
-            .key-code { font-size: 12px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
-            .action-btn { padding: 6px; }
+            .btn-primary.query-btn {
+                order: 10;
+                margin-top: 5px;
+            }
             
-            /* 表格容器允许左右滑动 */
-            .table-container { 
-                margin: 0 -10px; 
-                padding: 0 10px;
-                -webkit-overflow-scrolling: touch;
+            .view-toggle {
+                display: none !important;
             }
         }
 
@@ -273,9 +632,12 @@
             </div>
         </div>
 
-        <div class="main-grid">
+        <div class="main-grid" id="mainGrid">
             <!-- 左侧：生成面板 -->
             <div class="panel" id="generatePanel">
+                <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="切换侧边栏">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
                 <div class="panel-header" onclick="togglePanel('generatePanel')">
                     <h2><i class="fas fa-plus-circle"></i> 快捷生成</h2>
                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -312,16 +674,66 @@
 
             <!-- 右侧：数据列表 -->
             <div class="panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                     <h2><i class="fas fa-list-ul"></i> 激活码库</h2>
-                    <button class="action-btn" onclick="fetchKeys()"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="view-toggle">
+                            <button class="view-toggle-btn active" id="viewTableBtn" onclick="setViewMode('table')" title="表格视图">
+                                <i class="fas fa-table-list"></i>
+                            </button>
+                            <button class="view-toggle-btn" id="viewCardBtn" onclick="setViewMode('card')" title="卡片视图">
+                                <i class="fas fa-table-cells-large"></i>
+                            </button>
+                        </div>
+                        <button class="action-btn" onclick="fetchKeys(1)"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    </div>
+                </div>
+                
+                <!-- 筛选栏 -->
+                <div class="filter-header" onclick="toggleFilter()">
+                    <span><i class="fas fa-filter"></i> 筛选查询</span>
+                    <i class="fas fa-chevron-down collapse-icon" id="filterCollapseIcon"></i>
+                </div>
+                <div class="filter-bar" id="filterBar">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <input type="text" id="filterKey" class="filter-input" placeholder="搜索激活码..." onchange="fetchKeys(1)">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <input type="text" id="filterDevice" class="filter-input" placeholder="搜索设备码..." onchange="fetchKeys(1)">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="filterStatus" class="filter-input" style="flex: 1;" onchange="fetchKeys(1)">
+                            <option value="">所有状态</option>
+                            <option value="true">已激活</option>
+                            <option value="false">未使用</option>
+                        </select>
+                        <input type="number" id="filterDuration" class="filter-input" style="flex: 1;" placeholder="有效期(天)" onchange="fetchKeys(1)">
+                    </div>
+                    <button class="btn-primary query-btn" onclick="fetchKeys(1)">查询</button>
+                </div>
+
+                <!-- 批量操作栏 -->
+                <div class="batch-action-bar" id="batchActionBar">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="font-size: 13px; color: var(--muted);">已选择 <span id="selectedCount" style="color: white; font-weight: bold;">0</span> 项</span>
+                        <div class="selection-controls">
+                            <button class="selection-btn" onclick="toggleSelectAllPage(true)" title="全选当前页">全选</button>
+                            <button class="selection-btn" onclick="toggleSelectAllPage(false)" title="取消选择">取消</button>
+                            <button class="selection-btn" onclick="invertSelection()" title="反选当前页">反选</button>
+                        </div>
+                    </div>
+                    <button class="action-btn delete" onclick="batchDelete()" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                        <i class="fas fa-trash"></i> 批量删除
+                    </button>
                 </div>
                 
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                                 <th>激活密钥</th>
+                                <th>设备码</th>
                                 <th>有效期</th>
                                 <th>当前状态</th>
                                 <th>过期时间</th>
@@ -333,6 +745,23 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <div class="page-info">
+                        共 <span id="totalCount">0</span> 条记录，当前第 <span id="currentPage">1</span> 页
+                    </div>
+                    <div class="page-controls">
+                        <select id="pageSizeSelect" class="filter-input" style="width: auto; padding: 4px 8px;" onchange="fetchKeys(1)">
+                            <option value="5" selected>5条/页</option>
+                            <option value="10">10条/页</option>
+                            <option value="20">20条/页</option>
+                            <option value="50">50条/页</option>
+                        </select>
+                        <button class="page-btn" onclick="changePage(-1)" id="prevPageBtn"><i class="fas fa-chevron-left"></i></button>
+                        <button class="page-btn" onclick="changePage(1)" id="nextPageBtn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -341,18 +770,65 @@
         const API_URL = '/api/activation';
         let currentAuth = localStorage.getItem('admin_token');
         let selectedDuration = 30;
+        let currentPage = 1;
+        let selectedIds = new Set();
+        let currentViewMode = window.innerWidth <= 768 ? 'card' : 'table';
+
+        // 手机端强制仅卡片模式
+        if (window.innerWidth <= 768) currentViewMode = 'card';
+
+        // 初始化视图模式
+        window.onload = () => {
+            if (window.innerWidth <= 768) {
+                setViewMode('card');
+            } else if (currentViewMode === 'card') {
+                setViewMode('card');
+            }
+        };
+
+        function setViewMode(mode) {
+            // 手机端强制卡片模式
+            if (window.innerWidth <= 768) mode = 'card';
+            
+            currentViewMode = mode;
+            const container = document.querySelector('.table-container');
+            const viewTableBtn = document.getElementById('viewTableBtn');
+            const viewCardBtn = document.getElementById('viewCardBtn');
+            
+            if (mode === 'card') {
+                container.classList.add('card-view-active');
+                viewCardBtn.classList.add('active');
+                viewTableBtn.classList.remove('active');
+            } else {
+                container.classList.remove('card-view-active');
+                viewTableBtn.classList.add('active');
+                viewCardBtn.classList.remove('active');
+            }
+        }
+
+        // 处理卡片点击（仅在卡片模式下生效）
+        function handleRowClick(e, id) {
+            // 如果点击的是按钮或输入框，不触发整行点击逻辑
+            if (e.target.closest('button') || e.target.closest('input')) {
+                return;
+            }
+            
+            toggleSelect(id);
+        }
 
         // 初始化时长交互
         document.querySelectorAll('.duration-item').forEach(item => {
-            item.onclick = () => {
+            item.onclick = (e) => {
                 if (item.id === 'customBtn') {
                     document.getElementById('durationInput').style.display = 'block';
                 } else {
                     document.getElementById('durationInput').style.display = 'none';
                     selectedDuration = parseInt(item.dataset.days);
                 }
+                // 移除其他 active 类
                 document.querySelectorAll('.duration-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
+                // 添加当前 active 类
+                e.currentTarget.classList.add('active');
             };
         });
 
@@ -372,7 +848,7 @@
                     localStorage.setItem('admin_token', password);
                     currentAuth = password;
                     showAdmin();
-                    fetchKeys();
+                    fetchKeys(1);
                 } else {
                     alert('授权验证失败，请检查密钥');
                 }
@@ -390,27 +866,77 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('adminSection').style.display = 'block';
             
-            // 手机端默认折叠生成面板
+            // 手机端默认折叠生成面板和查询面板
             if (window.innerWidth <= 768) {
                 document.getElementById('generatePanel').classList.add('collapsed');
+                const filterBar = document.getElementById('filterBar');
+                if (filterBar) {
+                    filterBar.classList.add('collapsed');
+                    document.getElementById('filterCollapseIcon').style.transform = 'rotate(-180deg)';
+                }
             }
         }
 
         function togglePanel(id) {
+            // PC 模式下 generatePanel 不支持垂直折叠
+            if (id === 'generatePanel' && window.innerWidth > 1024) return;
             const panel = document.getElementById(id);
             panel.classList.toggle('collapsed');
         }
 
-        async function fetchKeys() {
+        function toggleFilter() {
+            const bar = document.getElementById('filterBar');
+            const icon = document.getElementById('filterCollapseIcon');
+            bar.classList.toggle('collapsed');
+            icon.style.transform = bar.classList.contains('collapsed') ? 'rotate(-180deg)' : 'rotate(0deg)';
+        }
+
+        function toggleSidebar() {
+            // 仅在电脑版（宽屏）生效
+            if (window.innerWidth > 1024) {
+                document.getElementById('mainGrid').classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        async function fetchKeys(page) {
+            if (page) currentPage = page;
+            
+            const pageSize = document.getElementById('pageSizeSelect').value;
+            const key = document.getElementById('filterKey').value;
+            const device_id = document.getElementById('filterDevice').value;
+            const status = document.getElementById('filterStatus').value;
+            const duration = document.getElementById('filterDuration').value;
+
+            const params = new URLSearchParams({
+                action: 'list',
+                page: currentPage,
+                pageSize: pageSize,
+            });
+
+            if (key) params.append('key', key);
+            if (device_id) params.append('device_id', device_id);
+            if (status) params.append('is_used', status);
+            if (duration) params.append('duration_days', duration);
+
             try {
-                const res = await fetch(`${API_URL}?action=list`, {
+                const res = await fetch(`${API_URL}?${params.toString()}`, {
                     headers: { 'x-admin-auth': currentAuth }
                 });
                 if (res.status === 403) return handleLogout();
                 
                 const data = await res.json();
-                renderKeys(data);
-                updateStats(data);
+                // 清空选择
+                selectedIds.clear();
+                updateBatchActionBar();
+                document.getElementById('selectAll').checked = false;
+                
+                renderKeys(data.data);
+                updatePagination(data);
+                
+                // 更新统计信息
+                if (data.total !== undefined) document.getElementById('totalKeys').innerText = data.total;
+                if (data.used !== undefined) document.getElementById('usedKeys').innerText = data.used;
+                if (data.unused !== undefined) document.getElementById('unusedKeys').innerText = data.unused;
             } catch (err) {
                 console.error('Fetch failed', err);
             }
@@ -418,6 +944,11 @@
 
         function renderKeys(data) {
             const list = document.getElementById('keyList');
+            if (!data || data.length === 0) {
+                list.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--muted);">暂无数据</td></tr>';
+                return;
+            }
+
             list.innerHTML = data.map(item => {
                 const isExpired = item.expires_at && new Date(item.expires_at) < new Date();
                 let statusClass = item.is_used ? 'badge-used' : 'badge-unused';
@@ -428,20 +959,37 @@
                     statusText = '已过期';
                 }
 
+                const isSelected = selectedIds.has(item.id);
+
                 return `
-                    <tr>
-                        <td>
-                            <span class="key-code">${item.key}</span>
-                            <button class="action-btn" title="复制" onclick="copyText('${item.key}')">
-                                <i class="far fa-copy"></i>
-                            </button>
+                    <tr class="${isSelected ? 'selected' : ''}" onclick="handleRowClick(event, '${item.id}')" data-id="${item.id}">
+                        <td data-label="选择" style="text-align: center;">
+                            <input type="checkbox" class="key-checkbox" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')">
                         </td>
-                        <td>${item.duration_days >= 9999 ? '永久' : item.duration_days + '天'}</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
-                        <td style="color: var(--muted); font-size: 12px;">
+                        <td data-label="激活密钥">
+                            <div class="code-wrapper">
+                                <span class="key-code">${item.key}</span>
+                                <button class="action-btn mini" title="复制" onclick="copyText('${item.key}')">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td data-label="设备码">
+                            ${item.device_id ? `
+                                <div class="code-wrapper">
+                                    <span class="device-code" title="${item.device_id}">${item.device_id}</span>
+                                    <button class="action-btn mini" title="复制" onclick="copyText('${item.device_id}')">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            ` : '<span style="color:var(--muted)">-</span>'}
+                        </td>
+                        <td data-label="有效期">${item.duration_days >= 9999 ? '永久' : item.duration_days + '天'}</td>
+                        <td data-label="当前状态"><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td data-label="过期时间" style="color: var(--muted); font-size: 12px;">
                             ${item.expires_at ? new Date(item.expires_at).toLocaleDateString() : '-'}
                         </td>
-                        <td>
+                        <td data-label="操作">
                             <button class="action-btn delete" title="删除" onclick="deleteKey('${item.id}')">
                                 <i class="far fa-trash-can"></i>
                             </button>
@@ -451,10 +999,120 @@
             }).join('');
         }
 
-        function updateStats(data) {
-            document.getElementById('totalKeys').innerText = data.length;
-            document.getElementById('usedKeys').innerText = data.filter(i => i.is_used).length;
-            document.getElementById('unusedKeys').innerText = data.filter(i => !i.is_used).length;
+        function updatePagination(data) {
+            document.getElementById('totalCount').innerText = data.total;
+            document.getElementById('currentPage').innerText = data.page;
+            
+            const totalPages = Math.ceil(data.total / data.pageSize);
+            document.getElementById('prevPageBtn').disabled = data.page <= 1;
+            document.getElementById('nextPageBtn').disabled = data.page >= totalPages;
+        }
+
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage < 1) return;
+            fetchKeys(newPage);
+        }
+
+        // 批量选择逻辑
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            toggleSelectAllPage(selectAll.checked);
+        }
+
+        function toggleSelectAllPage(select) {
+            const checkboxes = document.querySelectorAll('.key-checkbox');
+            checkboxes.forEach(cb => {
+                const id = cb.value;
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                cb.checked = select;
+                if (select) {
+                    selectedIds.add(id);
+                    if (row) row.classList.add('selected');
+                } else {
+                    selectedIds.delete(id);
+                    if (row) row.classList.remove('selected');
+                }
+            });
+            updateBatchActionBar();
+        }
+
+        function invertSelection() {
+            const checkboxes = document.querySelectorAll('.key-checkbox');
+            checkboxes.forEach(cb => {
+                const id = cb.value;
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                cb.checked = !cb.checked;
+                if (cb.checked) {
+                    selectedIds.add(id);
+                    if (row) row.classList.add('selected');
+                } else {
+                    selectedIds.delete(id);
+                    if (row) row.classList.remove('selected');
+                }
+            });
+            updateBatchActionBar();
+        }
+
+        function toggleSelect(id) {
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            const checkbox = row ? row.querySelector('.key-checkbox') : null;
+
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+                if (row) row.classList.remove('selected');
+                if (checkbox) checkbox.checked = false;
+            } else {
+                selectedIds.add(id);
+                if (row) row.classList.add('selected');
+                if (checkbox) checkbox.checked = true;
+            }
+            updateBatchActionBar();
+        }
+
+        function updateBatchActionBar() {
+            const bar = document.getElementById('batchActionBar');
+            const count = document.getElementById('selectedCount');
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.key-checkbox');
+            
+            count.textContent = selectedIds.size;
+            if (selectedIds.size > 0) {
+                bar.classList.add('show');
+            } else {
+                bar.classList.remove('show');
+            }
+            
+            // 更新全选框状态
+            if (checkboxes.length > 0) {
+                selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
+            }
+        }
+
+        async function batchDelete() {
+            if (selectedIds.size === 0) return;
+            if (!confirm(`确定要删除选中的 ${selectedIds.size} 条记录吗？`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}?action=batch_delete`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-auth': currentAuth 
+                    },
+                    body: JSON.stringify({ ids: Array.from(selectedIds) })
+                });
+
+                if (res.ok) {
+                    alert('批量删除成功');
+                    fetchKeys(currentPage); // 刷新当前页
+                } else {
+                    const data = await res.json();
+                    alert('删除失败: ' + (data.error || '未知错误'));
+                }
+            } catch (err) {
+                alert('操作失败');
+            }
         }
 
         async function generateKeys() {
@@ -478,7 +1136,7 @@
             });
 
             if (res.ok) {
-                fetchKeys();
+                fetchKeys(1); // 生成后刷新回第一页
                 alert(`🚀 成功生成 ${count} 个激活码！`);
             }
         }
@@ -489,7 +1147,7 @@
                 method: 'DELETE',
                 headers: { 'x-admin-auth': currentAuth }
             });
-            if (res.ok) fetchKeys();
+            if (res.ok) fetchKeys(currentPage);
         }
 
         function copyText(text) {
@@ -508,7 +1166,7 @@
         // 自动登录
         if (currentAuth) {
             showAdmin();
-            fetchKeys();
+            fetchKeys(1);
         }
     </script>
 </body>

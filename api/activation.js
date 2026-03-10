@@ -6,7 +6,7 @@ dotenv.config();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Supabase configuration missing');
@@ -130,6 +130,22 @@ export default async function handler(req, res) {
         if (error) return res.status(500).json({ error: "创建失败", details: error.message });
         return res.status(201).json(data);
       }
+
+      // 5. 批量删除
+      if (action === "batch_delete") {
+        const { ids } = body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+          return res.status(400).json({ error: "请提供要删除的ID列表" });
+        }
+
+        const { error } = await supabase
+          .from('activation_keys')
+          .delete()
+          .in('id', ids);
+
+        if (error) return res.status(500).json({ error: "批量删除失败", details: error.message });
+        return res.status(200).json({ message: `成功删除 ${ids.length} 条记录` });
+      }
     }
 
     if (req.method === "GET") {
@@ -137,17 +153,57 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: "Forbidden: 鉴权失败" });
       }
 
-      // 4. 获取激活码列表
+      // 4. 获取激活码列表 (支持分页、筛选、排序)
       if (action === "list") {
-        const { data, error } = await supabase
-          .from('activation_keys')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 5;
+        const device_id = req.query.device_id;
+        const key = req.query.key;
+        const duration_days = req.query.duration_days;
+        const is_used = req.query.is_used;
 
-        if (error) return res.status(500).json({ error: "获取列表失败" });
-        return res.status(200).json(data);
+        let query = supabase
+          .from('activation_keys')
+          .select('*', { count: 'exact' });
+
+        // 筛选条件
+        if (device_id) query = query.ilike('device_id', `%${device_id}%`);
+        if (key) query = query.ilike('key', `%${key}%`);
+        if (duration_days) query = query.eq('duration_days', duration_days);
+        if (is_used !== undefined && is_used !== '') query = query.eq('is_used', is_used === 'true');
+
+        // 分页和排序
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        
+        // 并行执行所有查询，显著减少响应时间
+        const [mainResult, usedResult, unusedResult] = await Promise.all([
+          query
+            .order('created_at', { ascending: false })
+            .range(from, to),
+          supabase
+            .from('activation_keys')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_used', true),
+          supabase
+            .from('activation_keys')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_used', false)
+        ]);
+
+        if (mainResult.error) return res.status(500).json({ error: "获取列表失败", details: mainResult.error.message });
+
+        return res.status(200).json({ 
+          data: mainResult.data, 
+          total: mainResult.count, 
+          used: usedResult.count || 0,
+          unused: unusedResult.count || 0,
+          page, 
+          pageSize 
+        });
       }
     }
+
 
     if (req.method === "DELETE") {
       if (!checkAuth(req)) {
