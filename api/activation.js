@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import { redis } from './cache_system.js';
 
 dotenv.config();
 
@@ -33,6 +34,28 @@ function checkAuth(req) {
   return auth === ADMIN_PASSWORD;
 }
 
+/**
+ * 频率限制校验 (Redis 版)
+ * 限制每个 IP 每分钟最多 10 次激活/验证请求
+ */
+async function checkRateLimit(req) {
+  if (!redis) return true; // Redis 未连接则跳过校验
+  
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const key = `ratelimit:activation:${ip}`;
+  
+  try {
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.expire(key, 60);
+    }
+    return count <= 10;
+  } catch (e) {
+    console.error('[RateLimit] Error:', e);
+    return true; // 出错时放行
+  }
+}
+
 // 生成随机激活码
 function generateRandomKey(prefix = 'XHS') {
   return `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
@@ -62,9 +85,17 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
+      // 1. 频率限制 (仅针对激活和验证接口)
+      if (["activate", "verify"].includes(action)) {
+        const isAllowed = await checkRateLimit(req);
+        if (!isAllowed) {
+          return res.status(429).json({ error: "请求过于频繁，请 1 分钟后再试" });
+        }
+      }
+
       // 1. 验证激活码 (用户端 - 无需后台鉴权)
       if (action === "verify") {
-        const { key } = body;
+        const { key, device_id } = body;
         const { data, error } = await supabase
           .from('activation_keys')
           .select('*')
@@ -72,10 +103,16 @@ export default async function handler(req, res) {
           .single();
 
         if (error || !data) return res.status(404).json({ error: "激活码不存在" });
+
+        // 如果已激活，校验设备 ID
+        if (data.is_used && data.device_id !== device_id) {
+          return res.status(403).json({ error: "激活码与当前设备不匹配" });
+        }
+
         return res.status(200).json(data);
       }
 
-      // 2. 激活 (用户端 - 无需后台鉴权)
+      // 2. 激活 (支持设备码校验：如果已使用且设备码匹配，直接返回成功)
       if (action === "activate") {
         const { key, device_id } = body;
         
@@ -86,7 +123,15 @@ export default async function handler(req, res) {
           .single();
 
         if (fetchError || !keyData) return res.status(404).json({ error: "激活码不存在" });
-        if (keyData.is_used) return res.status(400).json({ error: "该激活码已被使用" });
+
+        // 如果已激活且设备码匹配，直接返回成功（实现重新获取状态）
+        if (keyData.is_used && keyData.device_id === device_id) {
+          return res.status(200).json({ message: "设备已激活", data: keyData });
+        }
+
+        if (keyData.is_used) {
+          return res.status(400).json({ error: "该激活码已被其他设备使用" });
+        }
 
         const used_at = new Date().toISOString();
         const expires_at = new Date(Date.now() + keyData.duration_days * 24 * 60 * 60 * 1000).toISOString();

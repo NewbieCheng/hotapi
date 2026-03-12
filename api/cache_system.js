@@ -8,10 +8,13 @@ dotenv.config();
 const memoryCache = new Map();
 const CACHE_DURATION = 3600; // 1小时缓存 (秒)
 
-let redis = null;
+export let redis = null;
 if (process.env.REDIS_URL) {
     try {
-        redis = new Redis(process.env.REDIS_URL);
+        redis = new Redis(process.env.REDIS_URL, {
+            maxRetriesPerRequest: 1,
+            retryStrategy: () => null // 不重试，避免阻塞接口
+        });
         console.log("Redis connected");
     } catch (e) {
         console.error("Redis connection failed", e);
