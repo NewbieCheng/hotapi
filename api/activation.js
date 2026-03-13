@@ -36,7 +36,7 @@ function checkAuth(req) {
 
 /**
  * 频率限制校验 (Redis 版)
- * 限制每个 IP 每分钟最多 10 次激活/验证请求
+ * 限制每个 IP 每 3 分钟最多 10 次激活/验证请求
  */
 async function checkRateLimit(req) {
   if (!redis) return true; // Redis 未连接则跳过校验
@@ -47,7 +47,7 @@ async function checkRateLimit(req) {
   try {
     const count = await redis.incr(key);
     if (count === 1) {
-      await redis.expire(key, 60);
+      await redis.expire(key, 180); // 3 分钟 (180 秒)
     }
     return count <= 10;
   } catch (e) {
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
       if (["activate", "verify"].includes(action)) {
         const isAllowed = await checkRateLimit(req);
         if (!isAllowed) {
-          return res.status(429).json({ error: "请求过于频繁，请 1 分钟后再试" });
+          return res.status(429).json({ error: "请求过于频繁，请 3 分钟后再试" });
         }
       }
 
