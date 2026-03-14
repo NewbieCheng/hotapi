@@ -934,7 +934,9 @@
                 updatePagination(data);
                 
                 // 更新统计信息
-                if (data.total !== undefined) document.getElementById('totalKeys').innerText = data.total;
+                if (data.used !== undefined && data.unused !== undefined) {
+                    document.getElementById('totalKeys').innerText = data.used + data.unused;
+                }
                 if (data.used !== undefined) document.getElementById('usedKeys').innerText = data.used;
                 if (data.unused !== undefined) document.getElementById('unusedKeys').innerText = data.unused;
             } catch (err) {
