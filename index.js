@@ -12,10 +12,10 @@ export default async function handler(req, res) {
     return res.end(JSON.stringify({ message: "Method Not Allowed" }));
   }
 
-  if (pathname !== "/") {
+  if (pathname !== "/" && !pathname.startsWith("/api/activation_v2")) {
     res.statusCode = 404;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    return res.end(JSON.stringify({ message: "Only /api/proxy is available" }));
+    return res.end(JSON.stringify({ message: "Only /api/proxy and /api/activation_v2 are available" }));
   }
 
   const html = `<!doctype html>

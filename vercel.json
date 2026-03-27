@@ -14,6 +14,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/activation_v2.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "admin.html",
       "use": "@vercel/static"
     },
@@ -40,6 +44,16 @@
     {
       "src": "/api/activation",
       "dest": "/api/activation.js",
+      "headers": {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+        "Access-Control-Allow-Headers": "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+      }
+    },
+    {
+      "src": "/api/activation_v2",
+      "dest": "/api/activation_v2.js",
       "headers": {
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Origin": "*",
