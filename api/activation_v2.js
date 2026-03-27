@@ -8,7 +8,7 @@ dotenv.config();
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const ENCRYPTION_SALT = process.env.ENCRYPTION_SALT || 'flowx_secure_salt_2024';
+const ENCRYPTION_SALT = process.env.ENCRYPTION_SALT;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Supabase configuration missing');
