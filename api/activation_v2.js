@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import { redis } from './cache_system.js';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 dotenv.config();
 
@@ -14,6 +16,26 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// R2 存储配置
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "4b6ac3c08d5432e53db988684facac19";
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || "9e092006e2af864b12f7751794b6fd3c";
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || "a3f6cb4d0f7c9c7cc10261cce232e7b40d32bcb2eb0341385c8d07d8504cd2eb";
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || "no996ai";
+
+let s3Client;
+if (R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY) {
+  s3Client = new S3Client({
+    region: "auto",
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+  });
+} else {
+  console.warn('R2 configuration missing (R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)');
+}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -95,10 +117,66 @@ export default async function handler(req, res) {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
       // 1. 频率限制
-      if (["activate", "verify"].includes(action)) {
+      if (["activate", "verify", "check_update"].includes(action)) {
         const isAllowed = await checkRateLimit(req);
         if (!isAllowed) {
           return res.status(429).json({ error: "请求过于频繁，请 3 分钟后再试" });
+        }
+      }
+
+      // 0. 版本检测更新 (支持设备码及加密返回)
+      if (action === "check_update") {
+        const { device_id, version } = body;
+        
+        try {
+          if (!s3Client) {
+            throw new Error("R2 Client is not configured");
+          }
+
+          // 1. 从 R2 读取 version.json
+          const getVersionCmd = new GetObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: "version.json"
+          });
+          
+          const versionResponse = await s3Client.send(getVersionCmd);
+          const versionStr = await versionResponse.Body.transformToString();
+          const versionData = JSON.parse(versionStr);
+          
+          // 2. 为最新插件文件生成预签名下载链接 (有效时间 1 小时)
+          const getFileCmd = new GetObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: versionData.filename || "my-new-plugin-v0.4.1.zip"
+          });
+          const presignedUrl = await getSignedUrl(s3Client, getFileCmd, { expiresIn: 3600 });
+          
+          // 3. 构造返回给插件的数据格式 (匹配 src/lib/updater.ts 的 UpdateInfo)
+          const latestVersionInfo = {
+            latest_version: versionData.version,
+            download_url: presignedUrl,
+            release_notes: Array.isArray(versionData.changelog) ? versionData.changelog.join('\n') : versionData.changelog,
+            release_date: versionData.release_date || "",
+            force_update: versionData.force_update || false
+          };
+
+          return res.status(200).json(encryptPayload({ 
+            success: true, 
+            data: latestVersionInfo 
+          }, device_id));
+        } catch (r2Error) {
+          console.error("[Update Check] R2 Error:", r2Error);
+          // 降级处理：如果没有配置或发生错误，返回兜底信息
+          const fallbackVersionInfo = {
+            latest_version: "0.6.6-beta",
+            download_url: "https://abc.no996ai.cn/my-new-plugin-v0.4.1.zip",
+            release_notes: "1. 优化了同步性能\n2. 修复了若干已知问题",
+            release_date: "2024-01-01",
+            force_update: false
+          };
+          return res.status(200).json(encryptPayload({ 
+            success: true, 
+            data: fallbackVersionInfo 
+          }, device_id));
         }
       }
 
