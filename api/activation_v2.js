@@ -118,7 +118,7 @@ export default async function handler(req, res) {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
       // 1. 频率限制
-      if (["activate", "verify", "check_update"].includes(action)) {
+      if (["activate", "verify", "check_update", "get_download_url"].includes(action)) {
         const isAllowed = await checkRateLimit(req);
         if (!isAllowed) {
           return res.status(429).json({ error: "请求过于频繁，请 3 分钟后再试" });
@@ -144,17 +144,10 @@ export default async function handler(req, res) {
           const versionStr = await versionResponse.Body.transformToString();
           const versionData = JSON.parse(versionStr);
           
-          // 2. 为最新插件文件生成预签名下载链接 (有效时间 1 小时)
-          const getFileCmd = new GetObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: versionData.filename || "my-new-plugin-v0.4.1.zip"
-          });
-          const presignedUrl = await getSignedUrl(s3Client, getFileCmd, { expiresIn: 3600 });
-          
-          // 3. 构造返回给插件的数据格式 (匹配 src/lib/updater.ts 的 UpdateInfo)
+          // 2. 构造返回给插件的数据格式 (不再预先生成下载链接，防止过期)
           const latestVersionInfo = {
             latest_version: versionData.version,
-            download_url: presignedUrl,
+            download_url: "", // 用户点击下载时动态获取
             release_notes: Array.isArray(versionData.changelog) ? versionData.changelog.join('\n') : versionData.changelog,
             release_date: versionData.release_date || "",
             force_update: versionData.force_update || false
@@ -169,7 +162,7 @@ export default async function handler(req, res) {
           // 降级处理：如果没有配置或发生错误，返回兜底信息
           const fallbackVersionInfo = {
             latest_version: "0.6.6-beta",
-            download_url: "https://abc.no996ai.cn/my-new-plugin-v0.4.1.zip",
+            download_url: "",
             release_notes: "1. 优化了同步性能\n2. 修复了若干已知问题",
             release_date: "2024-01-01",
             force_update: false
@@ -177,6 +170,40 @@ export default async function handler(req, res) {
           return res.status(200).json(encryptPayload({ 
             success: true, 
             data: fallbackVersionInfo 
+          }, device_id));
+        }
+      }
+
+      // 0.5 动态获取最新的下载地址
+      if (action === "get_download_url") {
+        const { device_id } = body;
+        try {
+          if (!s3Client) throw new Error("R2 Client is not configured");
+
+          const getVersionCmd = new GetObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: "version.json"
+          });
+          const versionResponse = await s3Client.send(getVersionCmd);
+          const versionStr = await versionResponse.Body.transformToString();
+          const versionData = JSON.parse(versionStr);
+
+          // 动态生成预签名下载链接 (有效时间 1 小时，由于是即时点击即时生成，所以不会过期)
+          const getFileCmd = new GetObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: versionData.filename || "my-new-plugin-v0.4.1.zip"
+          });
+          const presignedUrl = await getSignedUrl(s3Client, getFileCmd, { expiresIn: 3600 });
+
+          return res.status(200).json(encryptPayload({
+            success: true,
+            data: { download_url: presignedUrl }
+          }, device_id));
+        } catch (r2Error) {
+          console.error("[Get Download URL] R2 Error:", r2Error);
+          return res.status(200).json(encryptPayload({
+            success: false,
+            error: "获取下载地址失败"
           }, device_id));
         }
       }
