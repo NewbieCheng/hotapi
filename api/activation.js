@@ -61,6 +61,22 @@ function generateRandomKey(prefix = 'XHS') {
   return `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 }
 
+function normalizePermissions(input) {
+  if (!input) return null;
+  if (typeof input === 'string') {
+    try {
+      const parsed = JSON.parse(input);
+      return (parsed && typeof parsed === 'object') ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof input === 'object' && !Array.isArray(input)) {
+    return input;
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   setCors(res);
 
@@ -154,16 +170,22 @@ export default async function handler(req, res) {
 
       // 3. 创建激活码 (支持随机生成和批量)
       if (action === "create") {
-        const { key, duration_days, count = 1, prefix = 'XHS' } = body;
+        const { key, duration_days, count = 1, prefix = 'XHS', permissions } = body;
+        const normalizedPermissions = normalizePermissions(permissions);
         const keysToInsert = [];
 
         if (key) {
           // 指定生成单个
-          keysToInsert.push({ key, duration_days, is_used: false });
+          keysToInsert.push({ key, duration_days, is_used: false, permissions: normalizedPermissions });
         } else {
           // 随机批量生成
           for (let i = 0; i < count; i++) {
-            keysToInsert.push({ key: generateRandomKey(prefix), duration_days, is_used: false });
+            keysToInsert.push({
+              key: generateRandomKey(prefix),
+              duration_days,
+              is_used: false,
+              permissions: normalizedPermissions
+            });
           }
         }
 
@@ -174,6 +196,23 @@ export default async function handler(req, res) {
 
         if (error) return res.status(500).json({ error: "创建失败", details: error.message });
         return res.status(201).json(data);
+      }
+
+      if (action === "update_permissions") {
+        const { id, permissions } = body;
+        if (!id) return res.status(400).json({ error: "缺少 id" });
+        const normalizedPermissions = normalizePermissions(permissions);
+        if (!normalizedPermissions) {
+          return res.status(400).json({ error: "permissions 必须是合法 JSON 对象" });
+        }
+        const { data, error } = await supabase
+          .from('activation_keys')
+          .update({ permissions: normalizedPermissions })
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) return res.status(500).json({ error: "更新权限失败", details: error.message });
+        return res.status(200).json({ message: "权限更新成功", data });
       }
 
       // 5. 批量删除

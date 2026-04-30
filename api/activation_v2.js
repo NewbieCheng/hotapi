@@ -10,6 +10,7 @@ dotenv.config();
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const INCLUDE_PERMISSIONS_DEFAULT = String(process.env.ACTIVATION_V2_INCLUDE_PERMISSIONS_DEFAULT || '').toLowerCase() === 'true';
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Supabase configuration missing');
@@ -83,7 +84,23 @@ function generateRandomKey(prefix = 'XHS') {
   return `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 }
 
+
+
+
+
 const API_SALT = "XHS_NO_996_SECURE_API_SALT_V2_888!@#";
+
+
+
+
+
+
+
+
+
+
+
+
 
 // 加密返回的数据
 function encryptPayload(data, deviceId) {
@@ -101,6 +118,23 @@ function encryptPayload(data, deviceId) {
         e: finalBuffer.toString('base64'),
         i: iv.toString('base64')
     };
+}
+
+function parseBooleanFlag(value) {
+  if (value === true || value === 1) return true;
+  if (typeof value === 'string') {
+    const raw = value.trim().toLowerCase();
+    return raw === '1' || raw === 'true' || raw === 'yes';
+  }
+  return INCLUDE_PERMISSIONS_DEFAULT;
+}
+
+function sanitizeActivationData(row, includePermissions = false) {
+  if (!row || typeof row !== 'object') return row;
+  if (includePermissions) return row;
+  const cloned = { ...row };
+  delete cloned.permissions;
+  return cloned;
 }
 
 export default async function handler(req, res) {
@@ -210,7 +244,8 @@ export default async function handler(req, res) {
 
       // 1. 验证激活码 (用户端 - 无需后台鉴权)
       if (action === "verify") {
-        const { key, device_id } = body;
+        const { key, device_id, include_permissions } = body;
+        const includePermissions = parseBooleanFlag(include_permissions);
         const { data, error } = await supabase
           .from('activation_keys')
           .select('*')
@@ -224,12 +259,16 @@ export default async function handler(req, res) {
           return res.status(200).json(encryptPayload({ success: false, error: "激活码与当前设备不匹配" }, device_id));
         }
 
-        return res.status(200).json(encryptPayload({ success: true, data }, device_id));
+        return res.status(200).json(encryptPayload({
+          success: true,
+          data: sanitizeActivationData(data, includePermissions)
+        }, device_id));
       }
 
       // 2. 激活 (支持设备码校验)
       if (action === "activate") {
-        const { key, device_id } = body;
+        const { key, device_id, include_permissions } = body;
+        const includePermissions = parseBooleanFlag(include_permissions);
         
         const { data: keyData, error: fetchError } = await supabase
           .from('activation_keys')
@@ -241,7 +280,11 @@ export default async function handler(req, res) {
 
         // 如果已激活且设备码匹配，直接返回成功
         if (keyData.is_used && keyData.device_id === device_id) {
-          return res.status(200).json(encryptPayload({ success: true, message: "设备已激活", data: keyData }, device_id));
+          return res.status(200).json(encryptPayload({
+            success: true,
+            message: "设备已激活",
+            data: sanitizeActivationData(keyData, includePermissions)
+          }, device_id));
         }
 
         if (keyData.is_used) {
@@ -259,7 +302,11 @@ export default async function handler(req, res) {
           .single();
 
         if (error) return res.status(200).json(encryptPayload({ success: false, error: "激活失败", details: error.message }, device_id));
-        return res.status(200).json(encryptPayload({ success: true, message: "激活成功", data }, device_id));
+        return res.status(200).json(encryptPayload({
+          success: true,
+          message: "激活成功",
+          data: sanitizeActivationData(data, includePermissions)
+        }, device_id));
       }
       
       // 其他无需加密的后台接口逻辑保持原样

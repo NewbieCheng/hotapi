@@ -435,6 +435,72 @@
         }
         .action-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
         .action-btn.delete:hover { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+
+        .permission-builder {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .permission-quick-templates {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .permission-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .permission-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text);
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+        .permission-platforms {
+            margin-top: 10px;
+        }
+        .permission-platform-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .permission-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.7);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .permission-modal.show { display: flex; }
+        .permission-modal-card {
+            width: min(760px, 95vw);
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 18px;
+        }
+        .permission-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 12px;
+        }
         
         /* 批量操作栏中的选择控制按钮 */
         .selection-controls {
@@ -666,6 +732,42 @@
                         </div>
                     </div>
 
+                    <label class="form-label">默认权限 JSON（可选，留空=不写入权限）</label>
+                    <div class="permission-builder">
+                        <div class="permission-quick-templates">
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('all')">模板：全开</button>
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('basic')">模板：基础版</button>
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('collectorOnly')">模板：仅采集</button>
+                            <button class="action-btn mini" type="button" onclick="clearPermissionBuilder()">清空权限</button>
+                        </div>
+                        <div class="permission-grid">
+                            <label class="permission-toggle">AI(ai)<input type="checkbox" id="perm_ai" checked></label>
+                            <label class="permission-toggle">抓取(cp)<input type="checkbox" id="perm_cp" checked></label>
+                            <label class="permission-toggle">采集中心(co)<input type="checkbox" id="perm_co" checked></label>
+                            <label class="permission-toggle">同步(sy)<input type="checkbox" id="perm_sy" checked></label>
+                            <label class="permission-toggle">编辑器(ed)<input type="checkbox" id="perm_ed" checked></label>
+                            <label class="permission-toggle">热榜(hr)<input type="checkbox" id="perm_hr" checked></label>
+                            <label class="permission-toggle">备份(bk)<input type="checkbox" id="perm_bk" checked></label>
+                            <label class="permission-toggle">提示词库(pl)<input type="checkbox" id="perm_pl" checked></label>
+                            <label class="permission-toggle">悬浮组件(fw)<input type="checkbox" id="perm_fw" checked></label>
+                        </div>
+                        <div class="permission-platforms">
+                            <label class="form-label">允许平台(ac)</label>
+                            <div class="permission-platform-options">
+                                <label><input type="checkbox" class="perm-ac" value="xiaohongshu" checked> 小红书</label>
+                                <label><input type="checkbox" class="perm-ac" value="douyin" checked> 抖音</label>
+                                <label><input type="checkbox" class="perm-ac" value="weixin" checked> 微信</label>
+                                <label><input type="checkbox" class="perm-ac" value="juejin"> 掘金</label>
+                                <label><input type="checkbox" class="perm-ac" value="zhihu"> 知乎</label>
+                                <label><input type="checkbox" class="perm-ac" value="toutiao"> 头条</label>
+                                <label><input type="checkbox" class="perm-ac" value="weibo"> 微博</label>
+                                <label><input type="checkbox" class="perm-ac" value="bilibili"> B站</label>
+                            </div>
+                        </div>
+                        <button class="action-btn mini" type="button" onclick="syncPermissionJsonFromBuilder()">同步到 JSON 文本</button>
+                    </div>
+                    <textarea id="permissionsJson" class="input-control" rows="6" placeholder='{"ac":["xiaohongshu"],"ai":true,"cp":true,"co":true,"sy":true,"ed":true,"hr":true,"bk":true,"pl":true,"fw":true}'></textarea>
+
                     <button class="btn-primary" style="margin-top: 10px;" onclick="generateKeys()">
                         <i class="fas fa-bolt"></i> 立即一键生成
                     </button>
@@ -736,6 +838,7 @@
                                 <th>设备码</th>
                                 <th>有效期</th>
                                 <th>当前状态</th>
+                                <th>权限</th>
                                 <th>过期时间</th>
                                 <th>操作</th>
                             </tr>
@@ -766,6 +869,48 @@
         </div>
     </div>
 
+    <div id="permissionEditModal" class="permission-modal">
+        <div class="permission-modal-card">
+            <h3 style="margin-bottom: 12px;">编辑权限（可视化）</h3>
+            <input type="hidden" id="permissionEditId">
+            <div class="permission-quick-templates">
+                <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('all')">模板：全开</button>
+                <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('basic')">模板：基础版</button>
+                <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('collectorOnly')">模板：仅采集</button>
+            </div>
+            <div class="permission-grid">
+                <label class="permission-toggle">AI(ai)<input type="checkbox" id="modal_perm_ai"></label>
+                <label class="permission-toggle">抓取(cp)<input type="checkbox" id="modal_perm_cp"></label>
+                <label class="permission-toggle">采集中心(co)<input type="checkbox" id="modal_perm_co"></label>
+                <label class="permission-toggle">同步(sy)<input type="checkbox" id="modal_perm_sy"></label>
+                <label class="permission-toggle">编辑器(ed)<input type="checkbox" id="modal_perm_ed"></label>
+                <label class="permission-toggle">热榜(hr)<input type="checkbox" id="modal_perm_hr"></label>
+                <label class="permission-toggle">备份(bk)<input type="checkbox" id="modal_perm_bk"></label>
+                <label class="permission-toggle">提示词库(pl)<input type="checkbox" id="modal_perm_pl"></label>
+                <label class="permission-toggle">悬浮组件(fw)<input type="checkbox" id="modal_perm_fw"></label>
+            </div>
+            <div class="permission-platforms">
+                <label class="form-label">允许平台(ac)</label>
+                <div class="permission-platform-options">
+                    <label><input type="checkbox" class="modal-perm-ac" value="xiaohongshu"> 小红书</label>
+                    <label><input type="checkbox" class="modal-perm-ac" value="douyin"> 抖音</label>
+                    <label><input type="checkbox" class="modal-perm-ac" value="weixin"> 微信</label>
+                    <label><input type="checkbox" class="modal-perm-ac" value="juejin"> 掘金</label>
+                    <label><input type="checkbox" class="modal-perm-ac" value="zhihu"> 知乎</label>
+                    <label><input type="checkbox" class="modal-perm-ac" value="toutiao"> 头条</label>
+                    <label><input type="checkbox" class="modal-perm-ac" value="weibo"> 微博</label>
+                    <label><input type="checkbox" class="modal-perm-ac" value="bilibili"> B站</label>
+                </div>
+            </div>
+            <label class="form-label">JSON 预览</label>
+            <textarea id="modalPermissionJson" class="input-control" rows="8"></textarea>
+            <div class="permission-modal-actions">
+                <button class="action-btn mini" type="button" onclick="closePermissionModal()">取消</button>
+                <button class="btn-primary" style="width:auto;padding:10px 14px;" type="button" onclick="savePermissionModal()">保存权限</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = '/api/activation';
         let currentAuth = localStorage.getItem('admin_token');
@@ -773,6 +918,7 @@
         let currentPage = 1;
         let selectedIds = new Set();
         let currentViewMode = window.innerWidth <= 768 ? 'card' : 'table';
+        const PERMISSION_KEYS = ['ai', 'cp', 'co', 'sy', 'ed', 'hr', 'bk', 'pl', 'fw'];
 
         // 手机端强制仅卡片模式
         if (window.innerWidth <= 768) currentViewMode = 'card';
@@ -784,7 +930,82 @@
             } else if (currentViewMode === 'card') {
                 setViewMode('card');
             }
+            applyPermissionTemplate('all');
+            syncPermissionJsonFromBuilder();
+            bindPermissionBuilderEvents();
         };
+
+        function bindPermissionBuilderEvents() {
+            [...PERMISSION_KEYS.map((k) => `perm_${k}`), ...PERMISSION_KEYS.map((k) => `modal_perm_${k}`)].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('change', () => {
+                    if (id.startsWith('modal_')) {
+                        document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+                    } else {
+                        syncPermissionJsonFromBuilder();
+                    }
+                });
+            });
+            document.querySelectorAll('.perm-ac').forEach((el) => {
+                el.addEventListener('change', () => syncPermissionJsonFromBuilder());
+            });
+            document.querySelectorAll('.modal-perm-ac').forEach((el) => {
+                el.addEventListener('change', () => {
+                    document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+                });
+            });
+        }
+
+        function buildPermissionObject(prefix = '') {
+            const data = {};
+            PERMISSION_KEYS.forEach((key) => {
+                const el = document.getElementById(`${prefix}perm_${key}`);
+                if (el) data[key] = Boolean(el.checked);
+            });
+            const acSelector = prefix === 'modal_' ? '.modal-perm-ac' : '.perm-ac';
+            const ac = Array.from(document.querySelectorAll(acSelector))
+                .filter((el) => el.checked)
+                .map((el) => el.value);
+            data.ac = ac;
+            return data;
+        }
+
+        function applyPermissionObject(data, prefix = '') {
+            const source = (data && typeof data === 'object') ? data : {};
+            PERMISSION_KEYS.forEach((key) => {
+                const el = document.getElementById(`${prefix}perm_${key}`);
+                if (el) el.checked = source[key] !== false;
+            });
+            const allowed = Array.isArray(source.ac) ? source.ac : [];
+            const acSelector = prefix === 'modal_' ? '.modal-perm-ac' : '.perm-ac';
+            document.querySelectorAll(acSelector).forEach((el) => {
+                el.checked = allowed.length === 0 ? true : allowed.includes(el.value);
+            });
+        }
+
+        function permissionTemplateByName(name) {
+            if (name === 'basic') {
+                return { ac: ['xiaohongshu', 'douyin', 'weixin', 'toutiao'], ai: true, cp: true, co: false, sy: true, ed: true, hr: false, bk: false, pl: false, fw: true };
+            }
+            if (name === 'collectorOnly') {
+                return { ac: ['xiaohongshu'], ai: false, cp: false, co: true, sy: false, ed: false, hr: false, bk: false, pl: false, fw: false };
+            }
+            return { ac: ['xiaohongshu', 'douyin', 'weixin', 'juejin', 'zhihu', 'toutiao', 'weibo', 'bilibili'], ai: true, cp: true, co: true, sy: true, ed: true, hr: true, bk: true, pl: true, fw: true };
+        }
+
+        function applyPermissionTemplate(name) {
+            applyPermissionObject(permissionTemplateByName(name));
+            syncPermissionJsonFromBuilder();
+        }
+
+        function clearPermissionBuilder() {
+            document.getElementById('permissionsJson').value = '';
+        }
+
+        function syncPermissionJsonFromBuilder() {
+            document.getElementById('permissionsJson').value = JSON.stringify(buildPermissionObject(''), null, 2);
+        }
 
         function setViewMode(mode) {
             // 手机端强制卡片模式
@@ -947,7 +1168,7 @@
         function renderKeys(data) {
             const list = document.getElementById('keyList');
             if (!data || data.length === 0) {
-                list.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color: var(--muted);">暂无数据</td></tr>';
+                list.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--muted);">暂无数据</td></tr>';
                 return;
             }
 
@@ -988,6 +1209,11 @@
                         </td>
                         <td data-label="有效期">${item.duration_days >= 9999 ? '永久' : item.duration_days + '天'}</td>
                         <td data-label="当前状态"><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td data-label="权限">
+                            <button class="action-btn mini" title="查看/编辑权限" onclick='editPermissions("${item.id}", "${encodeURIComponent(JSON.stringify(item.permissions || null))}")'>
+                                <i class="fas fa-shield-halved"></i>
+                            </button>
+                        </td>
                         <td data-label="过期时间" style="color: var(--muted); font-size: 12px;">
                             ${item.expires_at ? new Date(item.expires_at).toLocaleDateString() : '-'}
                         </td>
@@ -1120,6 +1346,7 @@
         async function generateKeys() {
             const count = parseInt(document.getElementById('batchCount').value);
             const prefix = document.getElementById('keyPrefix').value;
+            const permissionsRaw = document.getElementById('permissionsJson').value.trim();
             let duration = selectedDuration;
             
             if (document.getElementById('customBtn').classList.contains('active')) {
@@ -1128,13 +1355,27 @@
 
             if (!duration || isNaN(duration)) return alert('请输入有效时长');
 
+            let permissions = null;
+            if (permissionsRaw) {
+                try {
+                    permissions = JSON.parse(permissionsRaw);
+                    if (!permissions || typeof permissions !== 'object' || Array.isArray(permissions)) {
+                        alert('权限 JSON 必须是对象');
+                        return;
+                    }
+                } catch (e) {
+                    alert('权限 JSON 格式错误');
+                    return;
+                }
+            }
+
             const res = await fetch(`${API_URL}?action=create`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
                     'x-admin-auth': currentAuth
                 },
-                body: JSON.stringify({ count, duration_days: duration, prefix })
+                body: JSON.stringify({ count, duration_days: duration, prefix, permissions })
             });
 
             if (res.ok) {
@@ -1150,6 +1391,66 @@
                 headers: { 'x-admin-auth': currentAuth }
             });
             if (res.ok) fetchKeys(currentPage);
+        }
+
+        function applyPermissionTemplateToModal(name) {
+            applyPermissionObject(permissionTemplateByName(name), 'modal_');
+            document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+        }
+
+        function openPermissionModal(id, permissionsObj) {
+            document.getElementById('permissionEditId').value = id;
+            applyPermissionObject(permissionsObj || permissionTemplateByName('all'), 'modal_');
+            document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+            document.getElementById('permissionEditModal').classList.add('show');
+        }
+
+        function closePermissionModal() {
+            document.getElementById('permissionEditModal').classList.remove('show');
+        }
+
+        async function editPermissions(id, encodedCurrentPermissions) {
+            let permissionsObj = null;
+            try {
+                const decoded = decodeURIComponent(encodedCurrentPermissions || '');
+                permissionsObj = JSON.parse(decoded || 'null');
+            } catch {
+                permissionsObj = null;
+            }
+            openPermissionModal(id, permissionsObj);
+        }
+
+        async function savePermissionModal() {
+            const id = document.getElementById('permissionEditId').value;
+            if (!id) return;
+            let permissions = null;
+            try {
+                permissions = JSON.parse(document.getElementById('modalPermissionJson').value || '{}');
+                if (!permissions || typeof permissions !== 'object' || Array.isArray(permissions)) {
+                    alert('权限 JSON 必须是对象');
+                    return;
+                }
+            } catch {
+                alert('权限 JSON 格式错误');
+                return;
+            }
+
+            const res = await fetch(`${API_URL}?action=update_permissions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-auth': currentAuth
+                },
+                body: JSON.stringify({ id, permissions })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(`更新失败: ${data.error || '未知错误'}`);
+                return;
+            }
+            alert('权限更新成功');
+            closePermissionModal();
+            fetchKeys(currentPage);
         }
 
         function copyText(text) {
