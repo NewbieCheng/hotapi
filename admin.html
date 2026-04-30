@@ -420,3 +420,915 @@
             position: sticky; bottom: 20px; left: 0; right: 0;
             background: rgba(15, 23, 42, 0.95); border: 1px solid var(--primary);
             padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); backdrop-filter: blur(12px);
+            z-index: 100; margin-top: 20px; height: 0; opacity: 0; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .batch-action-bar.show { height: 60px; opacity: 1; margin-bottom: 20px; }
+        .selection-controls { display: flex; gap: 8px; background: rgba(255, 255, 255, 0.05); padding: 3px; border-radius: 8px; }
+        .selection-btn { background: transparent; border: none; color: var(--muted); font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .selection-btn:hover { color: white; background: rgba(255, 255, 255, 0.05); }
+
+        .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; }
+        .page-controls { display: flex; gap: 10px; align-items: center; }
+        .page-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .page-info { font-size: 13px; color: var(--muted); }
+
+        .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .logout-btn:hover { background: var(--danger); color: white; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+            #adminSection { padding: 20px 15px; }
+            .toggle-sidebar-btn { display: none; }
+            .main-grid.sidebar-collapsed { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .navbar { padding: 12px 15px; border-radius: 15px; margin-bottom: 25px; }
+            .nav-logo { font-size: 16px; }
+            .logout-btn { padding: 6px 12px; font-size: 13px; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+            .stat-card { padding: 10px 5px; flex-direction: column; text-align: center; gap: 5px; }
+            .stat-icon { width: 32px; height: 32px; font-size: 14px; }
+            .stat-info h3 { font-size: 10px; white-space: nowrap; }
+            .stat-info p { font-size: 16px; }
+            .panel { padding: 15px; border-radius: 18px; }
+            .panel h2 { font-size: 15px; margin-bottom: 15px; }
+            .duration-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .duration-item { padding: 8px 4px; font-size: 11px; }
+            .login-card { padding: 30px 20px; width: 90%; }
+            .login-card h1 { font-size: 20px; }
+            .filter-bar { grid-template-columns: 1fr; gap: 10px; padding: 12px; }
+            .btn-primary.query-btn { order: 10; margin-top: 5px; }
+            .view-toggle { display: none !important; }
+        }
+        @media (max-width: 480px) {
+            .duration-grid { grid-template-columns: repeat(2, 1fr); }
+            .nav-logo span { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录模块 -->
+    <div id="loginSection">
+        <div class="login-card">
+            <div class="logo-icon"><i class="fas fa-clock-rotate-left"></i></div>
+            <h1>今天不加班</h1>
+            <p>插件激活管理系统 v2.0</p>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="adminPassword" placeholder="输入管理密钥进入系统">
+            </div>
+            <button class="btn-primary" onclick="handleLogin()">授权登录</button>
+        </div>
+    </div>
+
+    <!-- 主管理界面 -->
+    <div id="adminSection">
+        <nav class="navbar">
+            <div class="nav-logo">
+                <i class="fas fa-mug-hot"></i>
+                今天不加班 <span style="font-weight: 300; opacity: 0.5; margin-left: 5px;">Admin</span>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i> 退出系统
+            </button>
+        </nav>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: var(--primary-glow); color: var(--primary);">
+                    <i class="fas fa-key"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>激活码总数</h3>
+                    <p id="totalKeys">-</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--secondary);">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>已激活用户</h3>
+                    <p id="usedKeys">-</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>待使用额度</h3>
+                    <p id="unusedKeys">-</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid" id="mainGrid">
+            <!-- 左侧：生成面板 -->
+            <div class="panel" id="generatePanel">
+                <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="切换侧边栏">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="panel-header" onclick="togglePanel('generatePanel')">
+                    <h2><i class="fas fa-plus-circle"></i> 快捷生成</h2>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                
+                <div class="panel-content">
+                    <label class="form-label">选择会员周期</label>
+                    <div class="duration-grid">
+                        <div class="duration-item" data-days="7">周卡</div>
+                        <div class="duration-item active" data-days="30">月卡</div>
+                        <div class="duration-item" data-days="90">季卡</div>
+                        <div class="duration-item" data-days="365">年卡</div>
+                        <div class="duration-item" data-days="9999">永久</div>
+                        <div class="duration-item" id="customBtn">自定义</div>
+                    </div>
+                    <input type="number" id="durationInput" class="input-control" placeholder="天数" style="display: none;">
+
+                    <div style="display: flex; gap: 15px;">
+                        <div style="flex: 1;">
+                            <label class="form-label">批量数量</label>
+                            <input type="number" id="batchCount" class="input-control" value="1" min="1" max="50">
+                        </div>
+                        <div style="flex: 1;">
+                            <label class="form-label">识别前缀</label>
+                            <input type="text" id="keyPrefix" class="input-control" value="XHS" placeholder="PRO">
+                        </div>
+                    </div>
+
+                    <!-- 业务级：功能权限配置区 -->
+                    <label class="form-label" style="margin-top: 10px;">默认功能授权</label>
+                    <div class="permission-builder">
+                        <div class="permission-quick-templates">
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('all')"><i class="fas fa-star"></i> 旗舰全开</button>
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('basic')"><i class="fas fa-layer-group"></i> 标准基础</button>
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('collectorOnly')"><i class="fas fa-spider"></i> 仅数据采集</button>
+                        </div>
+                        <div class="permission-grid">
+                            <label class="permission-toggle"><span class="perm-title">AI创作助手</span><input type="checkbox" id="perm_aiEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">单篇内容抓取</span><input type="checkbox" id="perm_captureEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">批量云端采集</span><input type="checkbox" id="perm_collectorEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">多端矩阵同步</span><input type="checkbox" id="perm_syncEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">图文沉浸排版</span><input type="checkbox" id="perm_editorEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">全网热榜洞察</span><input type="checkbox" id="perm_hotRankEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">云端自动备份</span><input type="checkbox" id="perm_backupEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">高阶提示词库</span><input type="checkbox" id="perm_promptLibraryEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">提效悬浮助手</span><input type="checkbox" id="perm_floatingWidgetEnabled" checked></label>
+                        </div>
+                        
+                        <label class="form-label" style="margin-top: 15px; margin-bottom: 5px;">分发渠道授权</label>
+                        <div class="permission-platform-options">
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="xiaohongshu" checked><span class="chip-content">小红书</span></label>
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="douyin" checked><span class="chip-content">抖音</span></label>
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="weixin" checked><span class="chip-content">微信生态</span></label>
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="juejin"><span class="chip-content">掘金</span></label>
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="zhihu"><span class="chip-content">知乎</span></label>
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="toutiao"><span class="chip-content">今日头条</span></label>
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="weibo"><span class="chip-content">微博</span></label>
+                            <label class="platform-chip"><input type="checkbox" class="perm-ac" value="bilibili"><span class="chip-content">B站</span></label>
+                        </div>
+                    </div>
+                    <!-- 原来的开发者用 JSON 框（隐藏处理，保证原有 JS 不出错） -->
+                    <textarea id="permissionsJson" class="input-control hidden-json" rows="6"></textarea>
+
+                    <button class="btn-primary" style="margin-top: 15px;" onclick="generateKeys()">
+                        <i class="fas fa-bolt"></i> 立即一键生成
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右侧：数据列表 -->
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <h2><i class="fas fa-list-ul"></i> 激活码库</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="view-toggle">
+                            <button class="view-toggle-btn active" id="viewTableBtn" onclick="setViewMode('table')" title="表格视图">
+                                <i class="fas fa-table-list"></i>
+                            </button>
+                            <button class="view-toggle-btn" id="viewCardBtn" onclick="setViewMode('card')" title="卡片视图">
+                                <i class="fas fa-table-cells-large"></i>
+                            </button>
+                        </div>
+                        <button class="action-btn" onclick="fetchKeys(1)"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    </div>
+                </div>
+                
+                <!-- 筛选栏 -->
+                <div class="filter-header" onclick="toggleFilter()">
+                    <span><i class="fas fa-filter"></i> 筛选查询</span>
+                    <i class="fas fa-chevron-down collapse-icon" id="filterCollapseIcon"></i>
+                </div>
+                <div class="filter-bar" id="filterBar">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <input type="text" id="filterKey" class="filter-input" placeholder="搜索激活码..." onchange="fetchKeys(1)">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <input type="text" id="filterDevice" class="filter-input" placeholder="搜索设备码..." onchange="fetchKeys(1)">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="filterStatus" class="filter-input" style="flex: 1;" onchange="fetchKeys(1)">
+                            <option value="">所有状态</option>
+                            <option value="true">已激活</option>
+                            <option value="false">未使用</option>
+                        </select>
+                        <input type="number" id="filterDuration" class="filter-input" style="flex: 1;" placeholder="有效期(天)" onchange="fetchKeys(1)">
+                    </div>
+                    <button class="btn-primary query-btn" onclick="fetchKeys(1)">查询</button>
+                </div>
+
+                <!-- 批量操作栏 -->
+                <div class="batch-action-bar" id="batchActionBar">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="font-size: 13px; color: var(--muted);">已选择 <span id="selectedCount" style="color: white; font-weight: bold;">0</span> 项</span>
+                        <div class="selection-controls">
+                            <button class="selection-btn" onclick="toggleSelectAllPage(true)" title="全选当前页">全选</button>
+                            <button class="selection-btn" onclick="toggleSelectAllPage(false)" title="取消选择">取消</button>
+                            <button class="selection-btn" onclick="invertSelection()" title="反选当前页">反选</button>
+                        </div>
+                    </div>
+                    <button class="action-btn delete" onclick="batchDelete()" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                        <i class="fas fa-trash"></i> 批量删除
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                                <th>激活密钥</th>
+                                <th>设备码</th>
+                                <th>有效期</th>
+                                <th>当前状态</th>
+                                <th>权限</th>
+                                <th>过期时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keyList">
+                            <!-- 动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination">
+                    <div class="page-info">
+                        共 <span id="totalCount">0</span> 条记录，当前第 <span id="currentPage">1</span> 页
+                    </div>
+                    <div class="page-controls">
+                        <select id="pageSizeSelect" class="filter-input" style="width: auto; padding: 4px 8px;" onchange="fetchKeys(1)">
+                            <option value="5" selected>5条/页</option>
+                            <option value="10">10条/页</option>
+                            <option value="20">20条/页</option>
+                            <option value="50">50条/页</option>
+                        </select>
+                        <button class="page-btn" onclick="changePage(-1)" id="prevPageBtn"><i class="fas fa-chevron-left"></i></button>
+                        <button class="page-btn" onclick="changePage(1)" id="nextPageBtn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：编辑独立用户的权限 -->
+    <div id="permissionEditModal" class="permission-modal">
+        <div class="permission-modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-sliders"></i> 用户业务授权管理</h3>
+                <button class="close-btn" onclick="closePermissionModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="hidden" id="permissionEditId">
+            
+            <div class="permission-builder" style="background: transparent; border: none; padding: 0;">
+                <div class="permission-quick-templates">
+                    <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('all')"><i class="fas fa-star"></i> 旗舰全开</button>
+                    <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('basic')"><i class="fas fa-layer-group"></i> 标准基础</button>
+                    <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('collectorOnly')"><i class="fas fa-spider"></i> 仅数据采集</button>
+                </div>
+                
+                <label class="form-label" style="margin-top: 5px;">单项功能开关</label>
+                <div class="permission-grid">
+                    <label class="permission-toggle"><span class="perm-title">AI创作助手</span><input type="checkbox" id="modal_perm_aiEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">单篇内容抓取</span><input type="checkbox" id="modal_perm_captureEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">批量云端采集</span><input type="checkbox" id="modal_perm_collectorEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">多端矩阵同步</span><input type="checkbox" id="modal_perm_syncEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">图文沉浸排版</span><input type="checkbox" id="modal_perm_editorEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">全网热榜洞察</span><input type="checkbox" id="modal_perm_hotRankEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">云端自动备份</span><input type="checkbox" id="modal_perm_backupEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">高阶提示词库</span><input type="checkbox" id="modal_perm_promptLibraryEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">提效悬浮助手</span><input type="checkbox" id="modal_perm_floatingWidgetEnabled"></label>
+                </div>
+                
+                <label class="form-label" style="margin-top: 15px; margin-bottom: 5px;">允许分发渠道</label>
+                <div class="permission-platform-options">
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="xiaohongshu"><span class="chip-content">小红书</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="douyin"><span class="chip-content">抖音</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="weixin"><span class="chip-content">微信生态</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="juejin"><span class="chip-content">掘金</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="zhihu"><span class="chip-content">知乎</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="toutiao"><span class="chip-content">今日头条</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="weibo"><span class="chip-content">微博</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="bilibili"><span class="chip-content">B站</span></label>
+                </div>
+            </div>
+
+            <!-- 隐藏底层 JSON -->
+            <textarea id="modalPermissionJson" class="input-control hidden-json" rows="8"></textarea>
+            
+            <div class="permission-modal-actions" style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 20px; padding-top: 15px;">
+                <button class="action-btn" type="button" onclick="closePermissionModal()" style="padding: 10px 20px;">放弃更改</button>
+                <button class="btn-primary" style="width:auto;padding:10px 24px; box-shadow: 0 4px 15px var(--primary-glow);" type="button" onclick="savePermissionModal()">
+                    <i class="fas fa-cloud-arrow-up"></i> 写入云端权限
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/activation';
+        let currentAuth = localStorage.getItem('admin_token');
+        let selectedDuration = 30;
+        let currentPage = 1;
+        let selectedIds = new Set();
+        let currentViewMode = window.innerWidth <= 768 ? 'card' : 'table';
+        
+        // 更新了底层的数据键名，完全对齐后端 TS 定义
+        const PERMISSION_KEYS = [
+            'aiEnabled', 
+            'captureEnabled', 
+            'collectorEnabled', 
+            'syncEnabled', 
+            'editorEnabled', 
+            'hotRankEnabled', 
+            'backupEnabled', 
+            'promptLibraryEnabled', 
+            'floatingWidgetEnabled'
+        ];
+
+        if (window.innerWidth <= 768) currentViewMode = 'card';
+
+        window.onload = () => {
+            if (window.innerWidth <= 768) {
+                setViewMode('card');
+            } else if (currentViewMode === 'card') {
+                setViewMode('card');
+            }
+            applyPermissionTemplate('all');
+            syncPermissionJsonFromBuilder();
+            bindPermissionBuilderEvents();
+        };
+
+        function bindPermissionBuilderEvents() {
+            [...PERMISSION_KEYS.map((k) => `perm_${k}`), ...PERMISSION_KEYS.map((k) => `modal_perm_${k}`)].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('change', () => {
+                    if (id.startsWith('modal_')) {
+                        document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+                    } else {
+                        syncPermissionJsonFromBuilder();
+                    }
+                });
+            });
+            document.querySelectorAll('.perm-ac').forEach((el) => {
+                el.addEventListener('change', () => syncPermissionJsonFromBuilder());
+            });
+            document.querySelectorAll('.modal-perm-ac').forEach((el) => {
+                el.addEventListener('change', () => {
+                    document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+                });
+            });
+        }
+
+        function buildPermissionObject(prefix = '') {
+            const data = {};
+            PERMISSION_KEYS.forEach((key) => {
+                const el = document.getElementById(`${prefix}perm_${key}`);
+                if (el) data[key] = Boolean(el.checked);
+            });
+            const acSelector = prefix === 'modal_' ? '.modal-perm-ac' : '.perm-ac';
+            const ac = Array.from(document.querySelectorAll(acSelector))
+                .filter((el) => el.checked)
+                .map((el) => el.value);
+            data.allowedChannels = ac; // 更新映射为 TS 类型的 allowedChannels
+            return data;
+        }
+
+        function applyPermissionObject(data, prefix = '') {
+            const source = (data && typeof data === 'object') ? data : {};
+            
+            // 回显布尔值权限，如果旧版不包含该 key，默认为 true 兼容老版本逻辑
+            PERMISSION_KEYS.forEach((key) => {
+                const el = document.getElementById(`${prefix}perm_${key}`);
+                if (el) el.checked = source[key] !== false; 
+            });
+            
+            // 回显 allowedChannels：如果不存在视为无限制全开
+            const allowed = Array.isArray(source.allowedChannels) ? source.allowedChannels : null;
+            const acSelector = prefix === 'modal_' ? '.modal-perm-ac' : '.perm-ac';
+            
+            document.querySelectorAll(acSelector).forEach((el) => {
+                if (!allowed) {
+                    el.checked = true; // null/undefined 表示向后兼容老版本的全部放开
+                } else {
+                    el.checked = allowed.includes(el.value);
+                }
+            });
+        }
+
+        function permissionTemplateByName(name) {
+            // 对齐最新的 TypeScript 定义
+            if (name === 'basic') {
+                return { 
+                    allowedChannels: ['xiaohongshu', 'douyin', 'weixin', 'toutiao'], 
+                    aiEnabled: true, 
+                    captureEnabled: true, 
+                    collectorEnabled: false, 
+                    syncEnabled: true, 
+                    editorEnabled: true, 
+                    hotRankEnabled: false, 
+                    backupEnabled: false, 
+                    promptLibraryEnabled: false, 
+                    floatingWidgetEnabled: true 
+                };
+            }
+            if (name === 'collectorOnly') {
+                return { 
+                    allowedChannels: ['xiaohongshu'], 
+                    aiEnabled: false, 
+                    captureEnabled: false, 
+                    collectorEnabled: true, 
+                    syncEnabled: false, 
+                    editorEnabled: false, 
+                    hotRankEnabled: false, 
+                    backupEnabled: false, 
+                    promptLibraryEnabled: false, 
+                    floatingWidgetEnabled: false 
+                };
+            }
+            // All 权限全开
+            return { 
+                allowedChannels: ['xiaohongshu', 'douyin', 'weixin', 'juejin', 'zhihu', 'toutiao', 'weibo', 'bilibili'], 
+                aiEnabled: true, 
+                captureEnabled: true, 
+                collectorEnabled: true, 
+                syncEnabled: true, 
+                editorEnabled: true, 
+                hotRankEnabled: true, 
+                backupEnabled: true, 
+                promptLibraryEnabled: true, 
+                floatingWidgetEnabled: true 
+            };
+        }
+
+        function applyPermissionTemplate(name) {
+            applyPermissionObject(permissionTemplateByName(name));
+            syncPermissionJsonFromBuilder();
+        }
+
+        function clearPermissionBuilder() {
+            document.getElementById('permissionsJson').value = '';
+        }
+
+        function syncPermissionJsonFromBuilder() {
+            document.getElementById('permissionsJson').value = JSON.stringify(buildPermissionObject(''), null, 2);
+        }
+
+        function setViewMode(mode) {
+            if (window.innerWidth <= 768) mode = 'card';
+            
+            currentViewMode = mode;
+            const container = document.querySelector('.table-container');
+            const viewTableBtn = document.getElementById('viewTableBtn');
+            const viewCardBtn = document.getElementById('viewCardBtn');
+            
+            if (mode === 'card') {
+                container.classList.add('card-view-active');
+                viewCardBtn.classList.add('active');
+                viewTableBtn.classList.remove('active');
+            } else {
+                container.classList.remove('card-view-active');
+                viewTableBtn.classList.add('active');
+                viewCardBtn.classList.remove('active');
+            }
+        }
+
+        function handleRowClick(e, id) {
+            if (e.target.closest('button') || e.target.closest('input')) return;
+            toggleSelect(id);
+        }
+
+        document.querySelectorAll('.duration-item').forEach(item => {
+            item.onclick = (e) => {
+                if (item.id === 'customBtn') {
+                    document.getElementById('durationInput').style.display = 'block';
+                } else {
+                    document.getElementById('durationInput').style.display = 'none';
+                    selectedDuration = parseInt(item.dataset.days);
+                }
+                document.querySelectorAll('.duration-item').forEach(i => i.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+            };
+        });
+
+        async function handleLogin() {
+            const password = document.getElementById('adminPassword').value;
+            if(!password) return;
+            try {
+                const res = await fetch(`${API_URL}?action=login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('admin_token', password);
+                    currentAuth = password;
+                    showAdmin();
+                    fetchKeys(1);
+                } else {
+                    alert('授权验证失败，请检查密钥');
+                }
+            } catch (err) {
+                alert('无法连接后端服务，请确保端口 3000 已启动');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('admin_token');
+            location.reload();
+        }
+
+        function showAdmin() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('adminSection').style.display = 'block';
+            
+            if (window.innerWidth <= 768) {
+                document.getElementById('generatePanel').classList.add('collapsed');
+                const filterBar = document.getElementById('filterBar');
+                if (filterBar) {
+                    filterBar.classList.add('collapsed');
+                    document.getElementById('filterCollapseIcon').style.transform = 'rotate(-180deg)';
+                }
+            }
+        }
+
+        function togglePanel(id) {
+            if (id === 'generatePanel' && window.innerWidth > 1024) return;
+            const panel = document.getElementById(id);
+            panel.classList.toggle('collapsed');
+        }
+
+        function toggleFilter() {
+            const bar = document.getElementById('filterBar');
+            const icon = document.getElementById('filterCollapseIcon');
+            bar.classList.toggle('collapsed');
+            icon.style.transform = bar.classList.contains('collapsed') ? 'rotate(-180deg)' : 'rotate(0deg)';
+        }
+
+        function toggleSidebar() {
+            if (window.innerWidth > 1024) {
+                document.getElementById('mainGrid').classList.toggle('sidebar-collapsed');
+            }
+        }
+
+        async function fetchKeys(page) {
+            if (page) currentPage = page;
+            
+            const pageSize = document.getElementById('pageSizeSelect').value;
+            const key = document.getElementById('filterKey').value;
+            const device_id = document.getElementById('filterDevice').value;
+            const status = document.getElementById('filterStatus').value;
+            const duration = document.getElementById('filterDuration').value;
+
+            const params = new URLSearchParams({ action: 'list', page: currentPage, pageSize: pageSize });
+            if (key) params.append('key', key);
+            if (device_id) params.append('device_id', device_id);
+            if (status) params.append('is_used', status);
+            if (duration) params.append('duration_days', duration);
+
+            try {
+                const res = await fetch(`${API_URL}?${params.toString()}`, { headers: { 'x-admin-auth': currentAuth } });
+                if (res.status === 403) return handleLogout();
+                
+                const data = await res.json();
+                selectedIds.clear();
+                updateBatchActionBar();
+                document.getElementById('selectAll').checked = false;
+                
+                renderKeys(data.data);
+                updatePagination(data);
+                
+                if (data.used !== undefined && data.unused !== undefined) {
+                    document.getElementById('totalKeys').innerText = data.used + data.unused;
+                }
+                if (data.used !== undefined) document.getElementById('usedKeys').innerText = data.used;
+                if (data.unused !== undefined) document.getElementById('unusedKeys').innerText = data.unused;
+            } catch (err) {
+                console.error('Fetch failed', err);
+            }
+        }
+
+        function renderKeys(data) {
+            const list = document.getElementById('keyList');
+            if (!data || data.length === 0) {
+                list.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--muted);">暂无数据</td></tr>';
+                return;
+            }
+
+            list.innerHTML = data.map(item => {
+                const isExpired = item.expires_at && new Date(item.expires_at) < new Date();
+                let statusClass = item.is_used ? 'badge-used' : 'badge-unused';
+                let statusText = item.is_used ? '已激活' : '未使用';
+                
+                if (isExpired && item.is_used) {
+                    statusClass = 'badge-expired';
+                    statusText = '已过期';
+                }
+
+                const isSelected = selectedIds.has(item.id);
+
+                return `
+                    <tr class="${isSelected ? 'selected' : ''}" onclick="handleRowClick(event, '${item.id}')" data-id="${item.id}">
+                        <td data-label="选择" style="text-align: center;">
+                            <input type="checkbox" class="key-checkbox" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')">
+                        </td>
+                        <td data-label="激活密钥">
+                            <div class="code-wrapper">
+                                <span class="key-code">${item.key}</span>
+                                <button class="action-btn mini" title="复制" onclick="copyText('${item.key}')">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td data-label="设备码">
+                            ${item.device_id ? `
+                                <div class="code-wrapper">
+                                    <span class="device-code" title="${item.device_id}">${item.device_id}</span>
+                                    <button class="action-btn mini" title="复制" onclick="copyText('${item.device_id}')">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            ` : '<span style="color:var(--muted)">-</span>'}
+                        </td>
+                        <td data-label="有效期">${item.duration_days >= 9999 ? '永久' : item.duration_days + '天'}</td>
+                        <td data-label="当前状态"><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td data-label="权限">
+                            <button class="action-btn mini" title="查看/编辑权限" onclick='editPermissions("${item.id}", "${encodeURIComponent(JSON.stringify(item.permissions || null))}")'>
+                                <i class="fas fa-shield-halved"></i>
+                            </button>
+                        </td>
+                        <td data-label="过期时间" style="color: var(--muted); font-size: 12px;">
+                            ${item.expires_at ? new Date(item.expires_at).toLocaleDateString() : '-'}
+                        </td>
+                        <td data-label="操作">
+                            <button class="action-btn delete" title="删除" onclick="deleteKey('${item.id}')">
+                                <i class="far fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updatePagination(data) {
+            document.getElementById('totalCount').innerText = data.total;
+            document.getElementById('currentPage').innerText = data.page;
+            const totalPages = Math.ceil(data.total / data.pageSize);
+            document.getElementById('prevPageBtn').disabled = data.page <= 1;
+            document.getElementById('nextPageBtn').disabled = data.page >= totalPages;
+        }
+
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage < 1) return;
+            fetchKeys(newPage);
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            toggleSelectAllPage(selectAll.checked);
+        }
+
+        function toggleSelectAllPage(select) {
+            const checkboxes = document.querySelectorAll('.key-checkbox');
+            checkboxes.forEach(cb => {
+                const id = cb.value;
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                cb.checked = select;
+                if (select) {
+                    selectedIds.add(id);
+                    if (row) row.classList.add('selected');
+                } else {
+                    selectedIds.delete(id);
+                    if (row) row.classList.remove('selected');
+                }
+            });
+            updateBatchActionBar();
+        }
+
+        function invertSelection() {
+            const checkboxes = document.querySelectorAll('.key-checkbox');
+            checkboxes.forEach(cb => {
+                const id = cb.value;
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                cb.checked = !cb.checked;
+                if (cb.checked) {
+                    selectedIds.add(id);
+                    if (row) row.classList.add('selected');
+                } else {
+                    selectedIds.delete(id);
+                    if (row) row.classList.remove('selected');
+                }
+            });
+            updateBatchActionBar();
+        }
+
+        function toggleSelect(id) {
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            const checkbox = row ? row.querySelector('.key-checkbox') : null;
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+                if (row) row.classList.remove('selected');
+                if (checkbox) checkbox.checked = false;
+            } else {
+                selectedIds.add(id);
+                if (row) row.classList.add('selected');
+                if (checkbox) checkbox.checked = true;
+            }
+            updateBatchActionBar();
+        }
+
+        function updateBatchActionBar() {
+            const bar = document.getElementById('batchActionBar');
+            const count = document.getElementById('selectedCount');
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.key-checkbox');
+            
+            count.textContent = selectedIds.size;
+            if (selectedIds.size > 0) {
+                bar.classList.add('show');
+            } else {
+                bar.classList.remove('show');
+            }
+            if (checkboxes.length > 0) {
+                selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
+            }
+        }
+
+        async function batchDelete() {
+            if (selectedIds.size === 0) return;
+            if (!confirm(`确定要删除选中的 ${selectedIds.size} 条记录吗？`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}?action=batch_delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-auth': currentAuth },
+                    body: JSON.stringify({ ids: Array.from(selectedIds) })
+                });
+
+                if (res.ok) {
+                    alert('批量删除成功');
+                    fetchKeys(currentPage); 
+                } else {
+                    const data = await res.json();
+                    alert('删除失败: ' + (data.error || '未知错误'));
+                }
+            } catch (err) {
+                alert('操作失败');
+            }
+        }
+
+        async function generateKeys() {
+            const count = parseInt(document.getElementById('batchCount').value);
+            const prefix = document.getElementById('keyPrefix').value;
+            const permissionsRaw = document.getElementById('permissionsJson').value.trim();
+            let duration = selectedDuration;
+            
+            if (document.getElementById('customBtn').classList.contains('active')) {
+                duration = parseInt(document.getElementById('durationInput').value);
+            }
+
+            if (!duration || isNaN(duration)) return alert('请输入有效时长');
+
+            let permissions = null;
+            if (permissionsRaw) {
+                try {
+                    permissions = JSON.parse(permissionsRaw);
+                    if (!permissions || typeof permissions !== 'object' || Array.isArray(permissions)) {
+                        alert('权限信息获取失败');
+                        return;
+                    }
+                } catch (e) {
+                    alert('权限信息格式错误');
+                    return;
+                }
+            }
+
+            const res = await fetch(`${API_URL}?action=create`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-auth': currentAuth },
+                body: JSON.stringify({ count, duration_days: duration, prefix, permissions })
+            });
+
+            if (res.ok) {
+                fetchKeys(1);
+                alert(`🚀 成功生成 ${count} 个激活码！`);
+            }
+        }
+
+        async function deleteKey(id) {
+            if (!confirm('确定彻底销毁此密钥记录吗？')) return;
+            const res = await fetch(`${API_URL}?action=delete&id=${id}`, { 
+                method: 'DELETE',
+                headers: { 'x-admin-auth': currentAuth }
+            });
+            if (res.ok) fetchKeys(currentPage);
+        }
+
+        function applyPermissionTemplateToModal(name) {
+            applyPermissionObject(permissionTemplateByName(name), 'modal_');
+            document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+        }
+
+        function openPermissionModal(id, permissionsObj) {
+            document.getElementById('permissionEditId').value = id;
+            applyPermissionObject(permissionsObj || permissionTemplateByName('all'), 'modal_');
+            document.getElementById('modalPermissionJson').value = JSON.stringify(buildPermissionObject('modal_'), null, 2);
+            document.getElementById('permissionEditModal').classList.add('show');
+        }
+
+        function closePermissionModal() {
+            document.getElementById('permissionEditModal').classList.remove('show');
+        }
+
+        async function editPermissions(id, encodedCurrentPermissions) {
+            let permissionsObj = null;
+            try {
+                const decoded = decodeURIComponent(encodedCurrentPermissions || '');
+                permissionsObj = JSON.parse(decoded || 'null');
+            } catch {
+                permissionsObj = null;
+            }
+            openPermissionModal(id, permissionsObj);
+        }
+
+        async function savePermissionModal() {
+            const id = document.getElementById('permissionEditId').value;
+            if (!id) return;
+            let permissions = null;
+            try {
+                permissions = JSON.parse(document.getElementById('modalPermissionJson').value || '{}');
+                if (!permissions || typeof permissions !== 'object' || Array.isArray(permissions)) {
+                    alert('权限数据异常');
+                    return;
+                }
+            } catch {
+                alert('权限数据格式错误');
+                return;
+            }
+
+            const res = await fetch(`${API_URL}?action=update_permissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-auth': currentAuth },
+                body: JSON.stringify({ id, permissions })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                alert(`更新失败: ${data.error || '未知错误'}`);
+                return;
+            }
+            alert('权限更新成功');
+            closePermissionModal();
+            fetchKeys(currentPage);
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            const btn = event.currentTarget;
+            const icon = btn.querySelector('i');
+            icon.className = 'fas fa-check';
+            icon.style.color = 'var(--primary)';
+            setTimeout(() => {
+                icon.className = 'far fa-copy';
+                icon.style.color = '';
+            }, 1000);
+        }
+
+        if (currentAuth) {
+            showAdmin();
+            fetchKeys(1);
+        }
+    </script>
+</body>
+</html>
