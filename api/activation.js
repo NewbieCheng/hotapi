@@ -63,18 +63,37 @@ function generateRandomKey(prefix = 'XHS') {
 
 function normalizePermissions(input) {
   if (!input) return null;
-  if (typeof input === 'string') {
-    try {
-      const parsed = JSON.parse(input);
-      return (parsed && typeof parsed === 'object') ? parsed : null;
-    } catch {
-      return null;
+  const toRecord = (value) => {
+    if (!value) return null;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : null;
+      } catch {
+        return null;
+      }
     }
-  }
-  if (typeof input === 'object' && !Array.isArray(input)) {
-    return input;
-  }
-  return null;
+    if (typeof value === 'object' && !Array.isArray(value)) return value;
+    return null;
+  };
+  const raw = toRecord(input);
+  if (!raw) return null;
+  const toBool = (v, fallback = true) => (typeof v === 'boolean' ? v : fallback);
+  const channels = Array.isArray(raw.ac)
+    ? raw.ac.filter((v) => typeof v === 'string')
+    : (Array.isArray(raw.allowedChannels) ? raw.allowedChannels.filter((v) => typeof v === 'string') : undefined);
+  return {
+    ...(channels !== undefined ? { ac: channels } : {}),
+    ai: toBool(raw.ai ?? raw.aiEnabled, true),
+    cp: toBool(raw.cp ?? raw.captureEnabled, true),
+    co: toBool(raw.co ?? raw.collectorEnabled, true),
+    sy: toBool(raw.sy ?? raw.syncEnabled, true),
+    ed: toBool(raw.ed ?? raw.editorEnabled, true),
+    hr: toBool(raw.hr ?? raw.hotRankEnabled, true),
+    bk: toBool(raw.bk ?? raw.backupEnabled, true),
+    pl: toBool(raw.pl ?? raw.promptLibraryEnabled, true),
+    fw: toBool(raw.fw ?? raw.floatingWidgetEnabled, true)
+  };
 }
 
 export default async function handler(req, res) {

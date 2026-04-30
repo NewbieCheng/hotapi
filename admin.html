@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #10b981; 
+            --primary: #10b981; /* 护眼绿 */
             --primary-glow: rgba(16, 185, 129, 0.3);
-            --secondary: #3b82f6; 
+            --secondary: #3b82f6; /* 科技蓝 */
             --bg: #0f172a;
             --card: #1e293b;
             --text: #f8fafc;
@@ -28,7 +28,7 @@
                               radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.1), transparent);
         }
 
-        /* ================= 基础结构与组件 ================= */
+        /* 登录页 */
         #loginSection {
             height: 100vh;
             display: flex;
@@ -98,59 +98,172 @@
 
         .main-grid { 
             display: grid; 
-            grid-template-columns: 380px 1fr; /* 左侧面板稍微加宽一点适应文案 */
+            grid-template-columns: 380px 1fr; 
             gap: 30px; 
             transition: all 0.3s ease;
         }
 
-        .main-grid.sidebar-collapsed { grid-template-columns: 80px 1fr; }
-        .main-grid.sidebar-collapsed #generatePanel { padding: 15px 10px; overflow: hidden; width: 80px; }
+        /* 侧边栏收缩逻辑 */
+        .main-grid.sidebar-collapsed {
+            grid-template-columns: 80px 1fr;
+        }
+        
+        .main-grid.sidebar-collapsed #generatePanel {
+            padding: 15px 10px;
+            overflow: hidden;
+            width: 80px;
+        }
+        
         .main-grid.sidebar-collapsed #generatePanel .panel-header h2,
-        .main-grid.sidebar-collapsed #generatePanel .panel-content { display: none; }
-        .main-grid.sidebar-collapsed #generatePanel .panel-header { justify-content: center; }
-        .main-grid.sidebar-collapsed #generatePanel .toggle-sidebar-btn i { transform: rotate(180deg); }
-        .main-grid.sidebar-collapsed .panel:last-child { max-width: 1400px; justify-self: center; width: 100%; }
+        .main-grid.sidebar-collapsed #generatePanel .panel-content {
+            display: none;
+        }
+        
+        .main-grid.sidebar-collapsed #generatePanel .panel-header {
+            justify-content: center;
+        }
+        
+        .main-grid.sidebar-collapsed #generatePanel .toggle-sidebar-btn i {
+            transform: rotate(180deg);
+        }
+
+        .main-grid.sidebar-collapsed .panel:last-child {
+            max-width: 1400px;
+            justify-self: center;
+            width: 100%;
+        }
 
         @media (min-width: 1025px) {
-            #generatePanel .collapse-icon { display: none !important; }
-            #generatePanel .panel-header { cursor: default; }
+            #generatePanel .collapse-icon {
+                display: none !important;
+            }
+            #generatePanel .panel-header {
+                cursor: default;
+            }
         }
 
         .filter-bar {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;
-            background: rgba(255, 255, 255, 0.02); padding: 15px; border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s;
-            overflow: hidden; max-height: 500px; opacity: 1; margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            max-height: 500px;
+            opacity: 1;
+            margin-bottom: 25px;
         }
-        .filter-bar.collapsed { max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; opacity: 0; border-color: transparent; pointer-events: none; }
-        .filter-header { display: none; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 10px; cursor: pointer; color: var(--muted); font-size: 14px; font-weight: 600; }
 
-        @media (max-width: 1024px) { .filter-header { display: flex; } }
+        .filter-bar.collapsed {
+            max-height: 0;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            border-color: transparent;
+            pointer-events: none;
+        }
+
+        .filter-header {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1024px) {
+            .filter-header { display: flex; }
+        }
 
         .filter-input {
-            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
-            color: white; padding: 10px 15px; border-radius: 10px; width: 100%; font-size: 13px; transition: all 0.2s;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            width: 100%;
+            font-size: 13px;
+            transition: all 0.2s;
         }
-        .filter-input:focus { border-color: var(--primary); background: rgba(15, 23, 42, 0.8); outline: none; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1); }
 
-        .query-btn { height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; }
+        .filter-input:focus {
+            border-color: var(--primary);
+            background: rgba(15, 23, 42, 0.8);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+        }
 
-        .view-toggle { display: flex; background: rgba(255, 255, 255, 0.05); padding: 4px; border-radius: 10px; gap: 4px; }
-        .view-toggle-btn { padding: 6px 12px; border-radius: 8px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
-        .view-toggle-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .query-btn {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+        }
 
-        /* 卡片模式样式 */
-        .card-view-active table, .card-view-active thead, .card-view-active tbody, .card-view-active th, .card-view-active td, .card-view-active tr { display: block; }
+        .view-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 10px;
+            gap: 4px;
+        }
+
+        .view-toggle-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        /* 卡片模式样式 (通用) */
+        .card-view-active table, 
+        .card-view-active thead, 
+        .card-view-active tbody, 
+        .card-view-active th, 
+        .card-view-active td, 
+        .card-view-active tr { display: block; }
         .card-view-active thead tr { position: absolute; top: -9999px; left: -9999px; }
         .card-view-active .table-container { margin: 0; padding: 0; overflow: visible; }
+        
         .card-view-active tr { 
-            background: rgba(255, 255, 255, 0.03); margin-bottom: 15px; border-radius: 16px; padding: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s; cursor: pointer; position: relative;
+            background: rgba(255, 255, 255, 0.03); margin-bottom: 15px; border-radius: 16px; 
+            padding: 15px; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative;
         }
         .card-view-active tr:hover { background: rgba(255, 255, 255, 0.05); transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.1); }
         .card-view-active tr.selected { border-color: var(--primary); background: rgba(16, 185, 129, 0.05); }
-        .card-view-active tr.selected::after { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 10px; right: 10px; color: var(--primary); font-size: 16px; }
-        .card-view-active td { border: none !important; padding: 8px 0 !important; display: flex; justify-content: space-between; align-items: center; text-align: right; background: transparent !important; border-radius: 0 !important; }
+        .card-view-active tr.selected::after {
+            content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; top: 10px; right: 10px; color: var(--primary); font-size: 16px;
+        }
+        
+        .card-view-active td { 
+            border: none !important; padding: 8px 0 !important; display: flex; 
+            justify-content: space-between; align-items: center; text-align: right; background: transparent !important; border-radius: 0 !important;
+        }
         .card-view-active td::before { content: attr(data-label); font-weight: 600; color: var(--muted); font-size: 11px; text-align: left; min-width: 70px; }
         .card-view-active td[data-label="选择"] { display: none; }
         .card-view-active td[data-label="操作"] { border-top: 1px solid rgba(255,255,255,0.05) !important; margin-top: 8px; padding-top: 10px !important; }
@@ -165,12 +278,13 @@
 
         .panel { 
             background: var(--glass); padding: 25px; border-radius: 24px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px);
+            position: relative;
         }
         .panel h2 { font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
         .panel h2 i { color: var(--primary); }
         .panel-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .panel-content { transition: all 0.4s; overflow: hidden; max-height: 1200px; opacity: 1; }
+        .panel-content { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; max-height: 800px; opacity: 1; }
         .panel.collapsed .panel-content { max-height: 0; margin: 0; opacity: 0; transform: translateY(-10px); }
         .collapse-icon { transition: transform 0.3s; color: var(--muted); }
         .collapsed .collapse-icon { transform: rotate(-180deg); }
@@ -193,6 +307,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; color: white; margin-bottom: 15px;
         }
 
+        /* 表格样式 */
         .table-container { overflow-x: auto; min-height: 400px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         th { text-align: left; padding: 15px; color: var(--muted); font-weight: 500; font-size: 13px; }
@@ -204,7 +319,9 @@
         .key-code { font-family: 'JetBrains Mono', monospace; background: rgba(16, 185, 129, 0.1); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 13px; word-break: break-all; line-height: 1.4; }
         .device-code { font-family: 'JetBrains Mono', monospace; background: rgba(59, 130, 246, 0.08); color: #94a3b8; padding: 4px 8px; border-radius: 6px; font-size: 11px; word-break: break-all; line-height: 1.4; max-width: 250px; }
 
-        .action-btn.mini { padding: 6px 10px; font-size: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .action-btn.mini { padding: 6px 10px; font-size: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; transition: 0.2s;}
+        .action-btn.mini:hover { background: rgba(255,255,255,0.15); }
+        
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
         .badge-unused { background: rgba(16, 185, 129, 0.15); color: #10b981; }
         .badge-used { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
@@ -214,16 +331,102 @@
         .action-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
         .action-btn.delete:hover { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
 
+
+        /* ================= 优化后的大厂风格权限配置 ================= */
+        .permission-builder {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .permission-quick-templates {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+            padding-bottom: 16px; border-bottom: 1px dashed rgba(255,255,255,0.08);
+        }
+        .permission-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        
+        /* 隐藏运营人员不需要看的开发者用 JSON 框 */
+        .hidden-json { display: none !important; }
+
+        /* 优雅的 Switch 开关 */
+        .permission-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: all 0.2s ease;
+        }
+        .permission-toggle:hover { background: rgba(255, 255, 255, 0.04); }
+        .perm-title { font-size: 13px; color: var(--text); font-weight: 500; }
+
+        .permission-toggle input[type="checkbox"] {
+            appearance: none; -webkit-appearance: none;
+            width: 36px; height: 20px; background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px; position: relative; outline: none; cursor: pointer;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); margin: 0;
+        }
+        .permission-toggle input[type="checkbox"]::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 16px; height: 16px; background: #94a3b8; border-radius: 50%;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .permission-toggle input[type="checkbox"]:checked {
+            background: var(--primary); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+        .permission-toggle input[type="checkbox"]:checked::after {
+            transform: translateX(16px); background: #ffffff;
+        }
+
+        /* 平台选择 Chip 标签 */
+        .permission-platform-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .platform-chip { cursor: pointer; user-select: none; }
+        .platform-chip input[type="checkbox"] { display: none; }
+        .platform-chip .chip-content {
+            display: inline-flex; align-items: center;
+            padding: 6px 14px; background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px;
+            font-size: 12px; font-weight: 500; color: var(--muted); transition: all 0.2s;
+        }
+        .platform-chip:hover .chip-content { background: rgba(255, 255, 255, 0.05); }
+        .platform-chip input[type="checkbox"]:checked + .chip-content {
+            background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.5);
+            color: #60a5fa; box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
+        }
+
+        /* 弹窗毛玻璃样式 */
+        .permission-modal {
+            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.6);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: 9999; display: none; align-items: center; justify-content: center;
+            padding: 20px; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .permission-modal.show { display: flex; opacity: 1; }
+        .permission-modal-card {
+            width: min(760px, 95vw); max-height: 90vh; overflow-y: auto;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); padding: 24px;
+            transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .permission-modal.show .permission-modal-card { transform: scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px;}
+        .modal-header h3 { font-size: 18px; color: white; display: flex; align-items: center; gap: 8px;}
+        .modal-header h3 i { color: var(--primary); }
+        .close-btn { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+        .close-btn:hover { color: white; }
+
+        /* ======================================================== */
+
+        .batch-action-bar {
+            position: sticky; bottom: 20px; left: 0; right: 0;
+            background: rgba(15, 23, 42, 0.95); border: 1px solid var(--primary);
+            padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); backdrop-filter: blur(12px);
+            z-index: 100; margin-top: 20px; height: 0; opacity: 0; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .batch-action-bar.show { height: 60px; opacity: 1; margin-bottom: 20px; }
         .selection-controls { display: flex; gap: 8px; background: rgba(255, 255, 255, 0.05); padding: 3px; border-radius: 8px; }
         .selection-btn { background: transparent; border: none; color: var(--muted); font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .selection-btn:hover { color: white; background: rgba(255, 255, 255, 0.05); }
-
-        .batch-action-bar {
-            position: sticky; bottom: 20px; left: 0; right: 0; background: rgba(15, 23, 42, 0.95);
-            border: 1px solid var(--primary); padding: 10px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4); backdrop-filter: blur(12px); z-index: 100; margin-top: 20px; height: 0; opacity: 0; overflow: hidden; transition: all 0.3s;
-        }
-        .batch-action-bar.show { height: 60px; opacity: 1; margin-bottom: 20px; }
 
         .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 12px; }
         .page-controls { display: flex; gap: 10px; align-items: center; }
@@ -239,153 +442,6 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-
-        /* ================= 核心重构：运营友好与大厂权限组件UI ================= */
-        
-        .permission-builder {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 18px;
-            margin-bottom: 15px;
-        }
-
-        .section-title {
-            font-size: 13px;
-            color: var(--muted);
-            font-weight: 600;
-            margin: 18px 0 12px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .section-title::before {
-            content: ''; display: block; width: 3px; height: 14px;
-            background: var(--primary); border-radius: 2px;
-        }
-
-        .permission-quick-templates {
-            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;
-        }
-        .permission-quick-templates .action-btn.mini {
-            padding: 8px 14px; font-size: 13px; font-weight: 500;
-        }
-
-        .permission-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-        }
-
-        /* 高级滑动开关 Switch */
-        .permission-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(15, 23, 42, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 10px 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .permission-toggle:hover {
-            background: rgba(255, 255, 255, 0.03);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-        .perm-title { font-size: 13px; color: var(--text); font-weight: 500; }
-        
-        .permission-toggle input[type="checkbox"] {
-            appearance: none;
-            width: 38px; height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            position: relative;
-            outline: none;
-            cursor: pointer;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            flex-shrink: 0;
-        }
-        .permission-toggle input[type="checkbox"]::after {
-            content: '';
-            position: absolute;
-            top: 2px; left: 2px;
-            width: 16px; height: 16px;
-            background: #94a3b8;
-            border-radius: 50%;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .permission-toggle input[type="checkbox"]:checked {
-            background: var(--primary);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 0 10px rgba(16, 185, 129, 0.2);
-        }
-        .permission-toggle input[type="checkbox"]:checked::after {
-            transform: translateX(18px);
-            background: #ffffff;
-        }
-
-        /* 平台选择高亮标签 Chip */
-        .permission-platform-options {
-            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
-        }
-        .platform-chip { cursor: pointer; user-select: none; }
-        .platform-chip input[type="checkbox"] { display: none; }
-        .platform-chip .chip-content {
-            display: inline-flex; align-items: center;
-            padding: 8px 16px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            font-size: 13px; font-weight: 500; color: var(--muted);
-            transition: all 0.2s;
-        }
-        .platform-chip:hover .chip-content { background: rgba(255, 255, 255, 0.05); }
-        .platform-chip input[type="checkbox"]:checked + .chip-content {
-            background: rgba(59, 130, 246, 0.15);
-            border-color: rgba(59, 130, 246, 0.5);
-            color: #60a5fa;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
-        }
-
-        /* 开发者调试折叠面板 */
-        .dev-details {
-            margin-top: 15px;
-            padding: 10px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 12px;
-            border: 1px dashed rgba(255,255,255,0.1);
-        }
-        .dev-details summary {
-            font-size: 12px; color: var(--muted); cursor: pointer; font-weight: 500; outline: none;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .dev-details summary:hover { color: white; }
-        .dev-details .input-control {
-            margin-top: 10px; margin-bottom: 0; font-family: monospace; font-size: 12px; color: #10b981; background: #020617;
-        }
-
-        /* 弹窗毛玻璃优化 */
-        .permission-modal {
-            position: fixed; inset: 0; background: rgba(2, 6, 23, 0.5); backdrop-filter: blur(8px);
-            z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px;
-            opacity: 0; transition: opacity 0.3s ease;
-        }
-        .permission-modal.show { display: flex; opacity: 1; }
-        .permission-modal-card {
-            width: min(800px, 95vw); max-height: 90vh; overflow-y: auto;
-            background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
-            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); transform: scale(0.95); transition: all 0.3s;
-        }
-        .permission-modal.show .permission-modal-card { transform: scale(1); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 16px; margin-bottom: 20px; }
-        .modal-header h3 { font-size: 18px; margin: 0; }
-        .close-modal-btn { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
-        .close-modal-btn:hover { color: white; }
-        .permission-modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
-
-        /* 移动端适配 */
         @media (max-width: 1024px) {
             .main-grid { grid-template-columns: 1fr; }
             #adminSection { padding: 20px 15px; }
@@ -410,16 +466,15 @@
             .filter-bar { grid-template-columns: 1fr; gap: 10px; padding: 12px; }
             .btn-primary.query-btn { order: 10; margin-top: 5px; }
             .view-toggle { display: none !important; }
-            .permission-modal-card { padding: 20px 15px; }
         }
         @media (max-width: 480px) {
             .duration-grid { grid-template-columns: repeat(2, 1fr); }
             .nav-logo span { display: none; }
-            .permission-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+    <!-- 登录模块 -->
     <div id="loginSection">
         <div class="login-card">
             <div class="logo-icon"><i class="fas fa-clock-rotate-left"></i></div>
@@ -433,6 +488,7 @@
         </div>
     </div>
 
+    <!-- 主管理界面 -->
     <div id="adminSection">
         <nav class="navbar">
             <div class="nav-logo">
@@ -475,61 +531,60 @@
         </div>
 
         <div class="main-grid" id="mainGrid">
+            <!-- 左侧：生成面板 -->
             <div class="panel" id="generatePanel">
                 <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="切换侧边栏">
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <div class="panel-header" onclick="togglePanel('generatePanel')">
-                    <h2><i class="fas fa-plus-circle"></i> 批量生成激活码</h2>
+                    <h2><i class="fas fa-plus-circle"></i> 快捷生成</h2>
                     <i class="fas fa-chevron-down collapse-icon"></i>
                 </div>
                 
                 <div class="panel-content">
-                    <label class="form-label">分配会员有效期</label>
+                    <label class="form-label">选择会员周期</label>
                     <div class="duration-grid">
-                        <div class="duration-item" data-days="7">体验周卡</div>
-                        <div class="duration-item active" data-days="30">常规月卡</div>
-                        <div class="duration-item" data-days="90">优惠季卡</div>
-                        <div class="duration-item" data-days="365">超值年卡</div>
-                        <div class="duration-item" data-days="9999">永久权益</div>
-                        <div class="duration-item" id="customBtn">自定义天数</div>
+                        <div class="duration-item" data-days="7">周卡</div>
+                        <div class="duration-item active" data-days="30">月卡</div>
+                        <div class="duration-item" data-days="90">季卡</div>
+                        <div class="duration-item" data-days="365">年卡</div>
+                        <div class="duration-item" data-days="9999">永久</div>
+                        <div class="duration-item" id="customBtn">自定义</div>
                     </div>
-                    <input type="number" id="durationInput" class="input-control" placeholder="输入具体天数" style="display: none;">
+                    <input type="number" id="durationInput" class="input-control" placeholder="天数" style="display: none;">
 
                     <div style="display: flex; gap: 15px;">
                         <div style="flex: 1;">
-                            <label class="form-label">生成数量</label>
+                            <label class="form-label">批量数量</label>
                             <input type="number" id="batchCount" class="input-control" value="1" min="1" max="50">
                         </div>
                         <div style="flex: 1;">
-                            <label class="form-label">识别前缀 (如 PRO_)</label>
-                            <input type="text" id="keyPrefix" class="input-control" value="XHS" placeholder="选填">
+                            <label class="form-label">识别前缀</label>
+                            <input type="text" id="keyPrefix" class="input-control" value="XHS" placeholder="PRO">
                         </div>
                     </div>
 
-                    <label class="form-label" style="margin-top: 5px;">新用户默认权限配置</label>
+                    <!-- 业务级：功能权限配置区 -->
+                    <label class="form-label" style="margin-top: 10px;">默认功能授权</label>
                     <div class="permission-builder">
-                        <div class="section-title" style="margin-top: 0;">一键快捷套餐</div>
                         <div class="permission-quick-templates">
-                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('all')">✨ 旗舰版(全开)</button>
-                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('basic')">📦 标准版(常用)</button>
-                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('collectorOnly')">🕷️ 纯采集团队</button>
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('all')"><i class="fas fa-star"></i> 旗舰全开</button>
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('basic')"><i class="fas fa-layer-group"></i> 标准基础</button>
+                            <button class="action-btn mini" type="button" onclick="applyPermissionTemplate('collectorOnly')"><i class="fas fa-spider"></i> 仅数据采集</button>
                         </div>
-
-                        <div class="section-title">功能模块开关</div>
                         <div class="permission-grid">
-                            <label class="permission-toggle"><span class="perm-title">AI智能创作</span><input type="checkbox" id="perm_ai" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">网页内容提取</span><input type="checkbox" id="perm_cp" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">云端素材中台</span><input type="checkbox" id="perm_co" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">多平台一键发布</span><input type="checkbox" id="perm_sy" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">高级图文排版</span><input type="checkbox" id="perm_ed" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">全网热点监控</span><input type="checkbox" id="perm_hr" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">数据云端备份</span><input type="checkbox" id="perm_bk" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">专属爆款词库</span><input type="checkbox" id="perm_pl" checked></label>
-                            <label class="permission-toggle"><span class="perm-title">桌面悬浮助手</span><input type="checkbox" id="perm_fw" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">AI创作助手</span><input type="checkbox" id="perm_aiEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">单篇内容抓取</span><input type="checkbox" id="perm_captureEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">批量云端采集</span><input type="checkbox" id="perm_collectorEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">多端矩阵同步</span><input type="checkbox" id="perm_syncEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">图文沉浸排版</span><input type="checkbox" id="perm_editorEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">全网热榜洞察</span><input type="checkbox" id="perm_hotRankEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">本地自动备份</span><input type="checkbox" id="perm_backupEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">高阶提示词库</span><input type="checkbox" id="perm_promptLibraryEnabled" checked></label>
+                            <label class="permission-toggle"><span class="perm-title">提效悬浮助手</span><input type="checkbox" id="perm_floatingWidgetEnabled" checked></label>
                         </div>
-
-                        <div class="section-title">允许分发的自媒体平台</div>
+                        
+                        <label class="form-label" style="margin-top: 15px; margin-bottom: 5px;">分发渠道授权</label>
                         <div class="permission-platform-options">
                             <label class="platform-chip"><input type="checkbox" class="perm-ac" value="xiaohongshu" checked><span class="chip-content">小红书</span></label>
                             <label class="platform-chip"><input type="checkbox" class="perm-ac" value="douyin" checked><span class="chip-content">抖音</span></label>
@@ -540,23 +595,20 @@
                             <label class="platform-chip"><input type="checkbox" class="perm-ac" value="weibo"><span class="chip-content">微博</span></label>
                             <label class="platform-chip"><input type="checkbox" class="perm-ac" value="bilibili"><span class="chip-content">B站</span></label>
                         </div>
-
-                        <details class="dev-details">
-                            <summary><i class="fas fa-code"></i> 开发者选项：查看底层 JSON (运营请忽略)</summary>
-                            <textarea id="permissionsJson" class="input-control" rows="4" placeholder='{"ac":["xiaohongshu"],"ai":true...}'></textarea>
-                            <button class="action-btn mini" type="button" onclick="syncPermissionJsonFromBuilder()">手动同步 UI 数据</button>
-                        </details>
                     </div>
+                    <!-- 原来的开发者用 JSON 框（隐藏处理，保证原有 JS 不出错） -->
+                    <textarea id="permissionsJson" class="input-control hidden-json" rows="6"></textarea>
 
-                    <button class="btn-primary" style="margin-top: 10px; font-size: 15px;" onclick="generateKeys()">
-                        <i class="fas fa-bolt"></i> 立即生成激活码
+                    <button class="btn-primary" style="margin-top: 15px;" onclick="generateKeys()">
+                        <i class="fas fa-bolt"></i> 立即一键生成
                     </button>
                 </div>
             </div>
 
+            <!-- 右侧：数据列表 -->
             <div class="panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                    <h2><i class="fas fa-list-ul"></i> 激活码发放明细</h2>
+                    <h2><i class="fas fa-list-ul"></i> 激活码库</h2>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <div class="view-toggle">
                             <button class="view-toggle-btn active" id="viewTableBtn" onclick="setViewMode('table')" title="表格视图">
@@ -566,43 +618,45 @@
                                 <i class="fas fa-table-cells-large"></i>
                             </button>
                         </div>
-                        <button class="action-btn" onclick="fetchKeys(1)"><i class="fas fa-sync-alt"></i> 刷新数据</button>
+                        <button class="action-btn" onclick="fetchKeys(1)"><i class="fas fa-sync-alt"></i> 刷新</button>
                     </div>
                 </div>
                 
+                <!-- 筛选栏 -->
                 <div class="filter-header" onclick="toggleFilter()">
-                    <span><i class="fas fa-filter"></i> 快速查询与筛选</span>
+                    <span><i class="fas fa-filter"></i> 筛选查询</span>
                     <i class="fas fa-chevron-down collapse-icon" id="filterCollapseIcon"></i>
                 </div>
                 <div class="filter-bar" id="filterBar">
                     <div class="input-group" style="margin-bottom: 0;">
-                        <input type="text" id="filterKey" class="filter-input" placeholder="按激活码搜索..." onchange="fetchKeys(1)">
+                        <input type="text" id="filterKey" class="filter-input" placeholder="搜索激活码..." onchange="fetchKeys(1)">
                     </div>
                     <div class="input-group" style="margin-bottom: 0;">
-                        <input type="text" id="filterDevice" class="filter-input" placeholder="按绑定设备码搜索..." onchange="fetchKeys(1)">
+                        <input type="text" id="filterDevice" class="filter-input" placeholder="搜索设备码..." onchange="fetchKeys(1)">
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <select id="filterStatus" class="filter-input" style="flex: 1;" onchange="fetchKeys(1)">
-                            <option value="">全部使用状态</option>
-                            <option value="true">已绑定激活</option>
-                            <option value="false">闲置未使用</option>
+                            <option value="">所有状态</option>
+                            <option value="true">已激活</option>
+                            <option value="false">未使用</option>
                         </select>
-                        <input type="number" id="filterDuration" class="filter-input" style="flex: 1;" placeholder="按有效期天数过滤" onchange="fetchKeys(1)">
+                        <input type="number" id="filterDuration" class="filter-input" style="flex: 1;" placeholder="有效期(天)" onchange="fetchKeys(1)">
                     </div>
                     <button class="btn-primary query-btn" onclick="fetchKeys(1)">查询</button>
                 </div>
 
+                <!-- 批量操作栏 -->
                 <div class="batch-action-bar" id="batchActionBar">
                     <div style="display: flex; align-items: center; gap: 15px;">
-                        <span style="font-size: 13px; color: var(--muted);">已勾选 <span id="selectedCount" style="color: white; font-weight: bold;">0</span> 个激活码</span>
+                        <span style="font-size: 13px; color: var(--muted);">已选择 <span id="selectedCount" style="color: white; font-weight: bold;">0</span> 项</span>
                         <div class="selection-controls">
-                            <button class="selection-btn" onclick="toggleSelectAllPage(true)" title="全选当前页">本页全选</button>
+                            <button class="selection-btn" onclick="toggleSelectAllPage(true)" title="全选当前页">全选</button>
                             <button class="selection-btn" onclick="toggleSelectAllPage(false)" title="取消选择">取消</button>
                             <button class="selection-btn" onclick="invertSelection()" title="反选当前页">反选</button>
                         </div>
                     </div>
-                    <button class="action-btn delete" onclick="batchDelete()" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 8px 16px;">
-                        <i class="fas fa-trash"></i> 批量作废并删除
+                    <button class="action-btn delete" onclick="batchDelete()" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">
+                        <i class="fas fa-trash"></i> 批量删除
                     </button>
                 </div>
                 
@@ -612,87 +666,90 @@
                             <tr>
                                 <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                                 <th>激活密钥</th>
-                                <th>绑定设备</th>
-                                <th>授权时长</th>
+                                <th>设备码</th>
+                                <th>有效期</th>
                                 <th>当前状态</th>
-                                <th>用户权限</th>
+                                <th>权限</th>
                                 <th>过期时间</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
                         <tbody id="keyList">
-                            </tbody>
+                            <!-- 动态加载 -->
+                        </tbody>
                     </table>
                 </div>
 
+                <!-- 分页 -->
                 <div class="pagination">
                     <div class="page-info">
-                        共查询到 <span id="totalCount" style="color:white; font-weight:bold;">0</span> 条记录，当前第 <span id="currentPage">1</span> 页
+                        共 <span id="totalCount">0</span> 条记录，当前第 <span id="currentPage">1</span> 页
                     </div>
                     <div class="page-controls">
                         <select id="pageSizeSelect" class="filter-input" style="width: auto; padding: 4px 8px;" onchange="fetchKeys(1)">
-                            <option value="5" selected>每页 5 条</option>
-                            <option value="10">每页 10 条</option>
-                            <option value="20">每页 20 条</option>
-                            <option value="50">每页 50 条</option>
+                            <option value="5" selected>5条/页</option>
+                            <option value="10">10条/页</option>
+                            <option value="20">20条/页</option>
+                            <option value="50">50条/页</option>
                         </select>
-                        <button class="page-btn" onclick="changePage(-1)" id="prevPageBtn"><i class="fas fa-chevron-left"></i> 上一页</button>
-                        <button class="page-btn" onclick="changePage(1)" id="nextPageBtn">下一页 <i class="fas fa-chevron-right"></i></button>
+                        <button class="page-btn" onclick="changePage(-1)" id="prevPageBtn"><i class="fas fa-chevron-left"></i></button>
+                        <button class="page-btn" onclick="changePage(1)" id="nextPageBtn"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- 弹窗：编辑独立用户的权限 -->
     <div id="permissionEditModal" class="permission-modal">
         <div class="permission-modal-card">
             <div class="modal-header">
-                <h3><i class="fas fa-user-shield"></i> 配置独立用户权限</h3>
-                <button class="close-modal-btn" onclick="closePermissionModal()"><i class="fas fa-times"></i></button>
+                <h3><i class="fas fa-sliders"></i> 用户业务授权管理</h3>
+                <button class="close-btn" onclick="closePermissionModal()"><i class="fas fa-times"></i></button>
             </div>
-            
             <input type="hidden" id="permissionEditId">
             
-            <div class="section-title" style="margin-top: 0;">一键覆盖套餐</div>
-            <div class="permission-quick-templates">
-                <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('all')">✨ 旗舰版(全开)</button>
-                <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('basic')">📦 标准版(常用)</button>
-                <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('collectorOnly')">🕷️ 纯采集团队</button>
+            <div class="permission-builder" style="background: transparent; border: none; padding: 0;">
+                <div class="permission-quick-templates">
+                    <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('all')"><i class="fas fa-star"></i> 旗舰全开</button>
+                    <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('basic')"><i class="fas fa-layer-group"></i> 标准基础</button>
+                    <button class="action-btn mini" type="button" onclick="applyPermissionTemplateToModal('collectorOnly')"><i class="fas fa-spider"></i> 仅数据采集</button>
+                </div>
+                
+                <label class="form-label" style="margin-top: 5px;">单项功能开关</label>
+                <div class="permission-grid">
+                    <label class="permission-toggle"><span class="perm-title">AI创作助手</span><input type="checkbox" id="modal_perm_aiEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">单篇内容抓取</span><input type="checkbox" id="modal_perm_captureEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">批量云端采集</span><input type="checkbox" id="modal_perm_collectorEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">多端矩阵同步</span><input type="checkbox" id="modal_perm_syncEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">图文沉浸排版</span><input type="checkbox" id="modal_perm_editorEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">全网热榜洞察</span><input type="checkbox" id="modal_perm_hotRankEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">云端自动备份</span><input type="checkbox" id="modal_perm_backupEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">高阶提示词库</span><input type="checkbox" id="modal_perm_promptLibraryEnabled"></label>
+                    <label class="permission-toggle"><span class="perm-title">提效悬浮助手</span><input type="checkbox" id="modal_perm_floatingWidgetEnabled"></label>
+                </div>
+                
+                <label class="form-label" style="margin-top: 15px; margin-bottom: 5px;">允许分发渠道</label>
+                <div class="permission-platform-options">
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="xiaohongshu"><span class="chip-content">小红书</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="douyin"><span class="chip-content">抖音</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="weixin"><span class="chip-content">微信生态</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="juejin"><span class="chip-content">掘金</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="zhihu"><span class="chip-content">知乎</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="toutiao"><span class="chip-content">今日头条</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="weibo"><span class="chip-content">微博</span></label>
+                    <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="bilibili"><span class="chip-content">B站</span></label>
+                </div>
             </div>
 
-            <div class="section-title">功能模块分配</div>
-            <div class="permission-grid">
-                <label class="permission-toggle"><span class="perm-title">AI智能创作</span><input type="checkbox" id="modal_perm_ai"></label>
-                <label class="permission-toggle"><span class="perm-title">网页内容提取</span><input type="checkbox" id="modal_perm_cp"></label>
-                <label class="permission-toggle"><span class="perm-title">云端素材中台</span><input type="checkbox" id="modal_perm_co"></label>
-                <label class="permission-toggle"><span class="perm-title">多平台一键发布</span><input type="checkbox" id="modal_perm_sy"></label>
-                <label class="permission-toggle"><span class="perm-title">高级图文排版</span><input type="checkbox" id="modal_perm_ed"></label>
-                <label class="permission-toggle"><span class="perm-title">全网热点监控</span><input type="checkbox" id="modal_perm_hr"></label>
-                <label class="permission-toggle"><span class="perm-title">数据云端备份</span><input type="checkbox" id="modal_perm_bk"></label>
-                <label class="permission-toggle"><span class="perm-title">专属爆款词库</span><input type="checkbox" id="modal_perm_pl"></label>
-                <label class="permission-toggle"><span class="perm-title">桌面悬浮助手</span><input type="checkbox" id="modal_perm_fw"></label>
-            </div>
-
-            <div class="section-title">允许分发的自媒体平台</div>
-            <div class="permission-platform-options">
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="xiaohongshu"><span class="chip-content">小红书</span></label>
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="douyin"><span class="chip-content">抖音</span></label>
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="weixin"><span class="chip-content">微信生态</span></label>
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="juejin"><span class="chip-content">掘金</span></label>
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="zhihu"><span class="chip-content">知乎</span></label>
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="toutiao"><span class="chip-content">今日头条</span></label>
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="weibo"><span class="chip-content">微博</span></label>
-                <label class="platform-chip"><input type="checkbox" class="modal-perm-ac" value="bilibili"><span class="chip-content">B站</span></label>
-            </div>
-
-            <details class="dev-details">
-                <summary><i class="fas fa-code"></i> 开发者选项：JSON 快照调试区</summary>
-                <textarea id="modalPermissionJson" class="input-control" rows="4"></textarea>
-            </details>
-
-            <div class="permission-modal-actions">
+            <!-- 隐藏底层 JSON -->
+            <textarea id="modalPermissionJson" class="input-control hidden-json" rows="8"></textarea>
+            
+            <div class="permission-modal-actions" style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 20px; padding-top: 15px;">
                 <button class="action-btn" type="button" onclick="closePermissionModal()" style="padding: 10px 20px;">放弃更改</button>
-                <button class="btn-primary" style="width:auto;padding:10px 24px;" type="button" onclick="savePermissionModal()">保存并下发生效</button>
+                <button class="btn-primary" style="width:auto;padding:10px 24px; box-shadow: 0 4px 15px var(--primary-glow);" type="button" onclick="savePermissionModal()">
+                    <i class="fas fa-cloud-arrow-up"></i> 写入云端权限
+                </button>
             </div>
         </div>
     </div>
@@ -704,12 +761,22 @@
         let currentPage = 1;
         let selectedIds = new Set();
         let currentViewMode = window.innerWidth <= 768 ? 'card' : 'table';
-        const PERMISSION_KEYS = ['ai', 'cp', 'co', 'sy', 'ed', 'hr', 'bk', 'pl', 'fw'];
+        
+        // 更新了底层的数据键名，完全对齐后端 TS 定义
+        const PERMISSION_KEYS = [
+            'aiEnabled', 
+            'captureEnabled', 
+            'collectorEnabled', 
+            'syncEnabled', 
+            'editorEnabled', 
+            'hotRankEnabled', 
+            'backupEnabled', 
+            'promptLibraryEnabled', 
+            'floatingWidgetEnabled'
+        ];
 
-        // 手机端强制仅卡片模式
         if (window.innerWidth <= 768) currentViewMode = 'card';
 
-        // 初始化视图模式
         window.onload = () => {
             if (window.innerWidth <= 768) {
                 setViewMode('card');
@@ -753,31 +820,75 @@
             const ac = Array.from(document.querySelectorAll(acSelector))
                 .filter((el) => el.checked)
                 .map((el) => el.value);
-            data.ac = ac;
+            data.allowedChannels = ac; // 更新映射为 TS 类型的 allowedChannels
             return data;
         }
 
         function applyPermissionObject(data, prefix = '') {
             const source = (data && typeof data === 'object') ? data : {};
+            
+            // 回显布尔值权限，如果旧版不包含该 key，默认为 true 兼容老版本逻辑
             PERMISSION_KEYS.forEach((key) => {
                 const el = document.getElementById(`${prefix}perm_${key}`);
-                if (el) el.checked = source[key] !== false;
+                if (el) el.checked = source[key] !== false; 
             });
-            const allowed = Array.isArray(source.ac) ? source.ac : [];
+            
+            // 回显 allowedChannels：如果不存在视为无限制全开
+            const allowed = Array.isArray(source.allowedChannels) ? source.allowedChannels : null;
             const acSelector = prefix === 'modal_' ? '.modal-perm-ac' : '.perm-ac';
+            
             document.querySelectorAll(acSelector).forEach((el) => {
-                el.checked = allowed.length === 0 ? true : allowed.includes(el.value);
+                if (!allowed) {
+                    el.checked = true; // null/undefined 表示向后兼容老版本的全部放开
+                } else {
+                    el.checked = allowed.includes(el.value);
+                }
             });
         }
 
         function permissionTemplateByName(name) {
+            // 对齐最新的 TypeScript 定义
             if (name === 'basic') {
-                return { ac: ['xiaohongshu', 'douyin', 'weixin', 'toutiao'], ai: true, cp: true, co: false, sy: true, ed: true, hr: false, bk: false, pl: false, fw: true };
+                return { 
+                    allowedChannels: ['xiaohongshu', 'douyin', 'weixin', 'toutiao'], 
+                    aiEnabled: true, 
+                    captureEnabled: true, 
+                    collectorEnabled: false, 
+                    syncEnabled: true, 
+                    editorEnabled: true, 
+                    hotRankEnabled: false, 
+                    backupEnabled: false, 
+                    promptLibraryEnabled: false, 
+                    floatingWidgetEnabled: true 
+                };
             }
             if (name === 'collectorOnly') {
-                return { ac: ['xiaohongshu'], ai: false, cp: false, co: true, sy: false, ed: false, hr: false, bk: false, pl: false, fw: false };
+                return { 
+                    allowedChannels: ['xiaohongshu'], 
+                    aiEnabled: false, 
+                    captureEnabled: false, 
+                    collectorEnabled: true, 
+                    syncEnabled: false, 
+                    editorEnabled: false, 
+                    hotRankEnabled: false, 
+                    backupEnabled: false, 
+                    promptLibraryEnabled: false, 
+                    floatingWidgetEnabled: false 
+                };
             }
-            return { ac: ['xiaohongshu', 'douyin', 'weixin', 'juejin', 'zhihu', 'toutiao', 'weibo', 'bilibili'], ai: true, cp: true, co: true, sy: true, ed: true, hr: true, bk: true, pl: true, fw: true };
+            // All 权限全开
+            return { 
+                allowedChannels: ['xiaohongshu', 'douyin', 'weixin', 'juejin', 'zhihu', 'toutiao', 'weibo', 'bilibili'], 
+                aiEnabled: true, 
+                captureEnabled: true, 
+                collectorEnabled: true, 
+                syncEnabled: true, 
+                editorEnabled: true, 
+                hotRankEnabled: true, 
+                backupEnabled: true, 
+                promptLibraryEnabled: true, 
+                floatingWidgetEnabled: true 
+            };
         }
 
         function applyPermissionTemplate(name) {
@@ -813,9 +924,7 @@
         }
 
         function handleRowClick(e, id) {
-            if (e.target.closest('button') || e.target.closest('input')) {
-                return;
-            }
+            if (e.target.closest('button') || e.target.closest('input')) return;
             toggleSelect(id);
         }
 
@@ -835,14 +944,12 @@
         async function handleLogin() {
             const password = document.getElementById('adminPassword').value;
             if(!password) return;
-            
             try {
                 const res = await fetch(`${API_URL}?action=login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
                 });
-                
                 const data = await res.json();
                 if (data.success) {
                     localStorage.setItem('admin_token', password);
@@ -850,10 +957,10 @@
                     showAdmin();
                     fetchKeys(1);
                 } else {
-                    alert('授权验证失败，请检查管理密钥');
+                    alert('授权验证失败，请检查密钥');
                 }
             } catch (err) {
-                alert('无法连接后端服务，请确保后端服务正常运行');
+                alert('无法连接后端服务，请确保端口 3000 已启动');
             }
         }
 
@@ -904,21 +1011,14 @@
             const status = document.getElementById('filterStatus').value;
             const duration = document.getElementById('filterDuration').value;
 
-            const params = new URLSearchParams({
-                action: 'list',
-                page: currentPage,
-                pageSize: pageSize,
-            });
-
+            const params = new URLSearchParams({ action: 'list', page: currentPage, pageSize: pageSize });
             if (key) params.append('key', key);
             if (device_id) params.append('device_id', device_id);
             if (status) params.append('is_used', status);
             if (duration) params.append('duration_days', duration);
 
             try {
-                const res = await fetch(`${API_URL}?${params.toString()}`, {
-                    headers: { 'x-admin-auth': currentAuth }
-                });
+                const res = await fetch(`${API_URL}?${params.toString()}`, { headers: { 'x-admin-auth': currentAuth } });
                 if (res.status === 403) return handleLogout();
                 
                 const data = await res.json();
@@ -942,14 +1042,14 @@
         function renderKeys(data) {
             const list = document.getElementById('keyList');
             if (!data || data.length === 0) {
-                list.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 30px; color: var(--muted);">暂无匹配的数据</td></tr>';
+                list.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--muted);">暂无数据</td></tr>';
                 return;
             }
 
             list.innerHTML = data.map(item => {
                 const isExpired = item.expires_at && new Date(item.expires_at) < new Date();
                 let statusClass = item.is_used ? 'badge-used' : 'badge-unused';
-                let statusText = item.is_used ? '已绑定' : '闲置中';
+                let statusText = item.is_used ? '已激活' : '未使用';
                 
                 if (isExpired && item.is_used) {
                     statusClass = 'badge-expired';
@@ -966,33 +1066,33 @@
                         <td data-label="激活密钥">
                             <div class="code-wrapper">
                                 <span class="key-code">${item.key}</span>
-                                <button class="action-btn mini" title="点击复制密钥" onclick="copyText('${item.key}')">
+                                <button class="action-btn mini" title="复制" onclick="copyText('${item.key}')">
                                     <i class="far fa-copy"></i>
                                 </button>
                             </div>
                         </td>
-                        <td data-label="绑定设备">
+                        <td data-label="设备码">
                             ${item.device_id ? `
                                 <div class="code-wrapper">
                                     <span class="device-code" title="${item.device_id}">${item.device_id}</span>
-                                    <button class="action-btn mini" title="点击复制设备码" onclick="copyText('${item.device_id}')">
+                                    <button class="action-btn mini" title="复制" onclick="copyText('${item.device_id}')">
                                         <i class="far fa-copy"></i>
                                     </button>
                                 </div>
-                            ` : '<span style="color:var(--muted)">— 无 —</span>'}
+                            ` : '<span style="color:var(--muted)">-</span>'}
                         </td>
-                        <td data-label="授权时长">${item.duration_days >= 9999 ? '永久' : item.duration_days + '天'}</td>
+                        <td data-label="有效期">${item.duration_days >= 9999 ? '永久' : item.duration_days + '天'}</td>
                         <td data-label="当前状态"><span class="badge ${statusClass}">${statusText}</span></td>
-                        <td data-label="用户权限">
-                            <button class="action-btn mini" title="配置该用户的可用权限" onclick='editPermissions("${item.id}", "${encodeURIComponent(JSON.stringify(item.permissions || null))}")'>
-                                <i class="fas fa-sliders-h"></i> 细化配置
+                        <td data-label="权限">
+                            <button class="action-btn mini" title="查看/编辑权限" onclick='editPermissions("${item.id}", "${encodeURIComponent(JSON.stringify(item.permissions || null))}")'>
+                                <i class="fas fa-shield-halved"></i>
                             </button>
                         </td>
                         <td data-label="过期时间" style="color: var(--muted); font-size: 12px;">
-                            ${item.expires_at ? new Date(item.expires_at).toLocaleDateString() : '—'}
+                            ${item.expires_at ? new Date(item.expires_at).toLocaleDateString() : '-'}
                         </td>
                         <td data-label="操作">
-                            <button class="action-btn delete" title="彻底删除此记录" onclick="deleteKey('${item.id}')">
+                            <button class="action-btn delete" title="删除" onclick="deleteKey('${item.id}')">
                                 <i class="far fa-trash-can"></i>
                             </button>
                         </td>
@@ -1004,7 +1104,6 @@
         function updatePagination(data) {
             document.getElementById('totalCount').innerText = data.total;
             document.getElementById('currentPage').innerText = data.page;
-            
             const totalPages = Math.ceil(data.total / data.pageSize);
             document.getElementById('prevPageBtn').disabled = data.page <= 1;
             document.getElementById('nextPageBtn').disabled = data.page >= totalPages;
@@ -1058,7 +1157,6 @@
         function toggleSelect(id) {
             const row = document.querySelector(`tr[data-id="${id}"]`);
             const checkbox = row ? row.querySelector('.key-checkbox') : null;
-
             if (selectedIds.has(id)) {
                 selectedIds.delete(id);
                 if (row) row.classList.remove('selected');
@@ -1083,7 +1181,6 @@
             } else {
                 bar.classList.remove('show');
             }
-            
             if (checkboxes.length > 0) {
                 selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
             }
@@ -1091,27 +1188,24 @@
 
         async function batchDelete() {
             if (selectedIds.size === 0) return;
-            if (!confirm(`警告：您确认要彻底删除选中的 ${selectedIds.size} 条激活记录吗？此操作不可逆！`)) return;
+            if (!confirm(`确定要删除选中的 ${selectedIds.size} 条记录吗？`)) return;
 
             try {
                 const res = await fetch(`${API_URL}?action=batch_delete`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-admin-auth': currentAuth 
-                    },
+                    headers: { 'Content-Type': 'application/json', 'x-admin-auth': currentAuth },
                     body: JSON.stringify({ ids: Array.from(selectedIds) })
                 });
 
                 if (res.ok) {
-                    alert('批量删除已完成');
+                    alert('批量删除成功');
                     fetchKeys(currentPage); 
                 } else {
                     const data = await res.json();
-                    alert('删除请求失败: ' + (data.error || '遇到未知错误'));
+                    alert('删除失败: ' + (data.error || '未知错误'));
                 }
             } catch (err) {
-                alert('网络异常，操作失败');
+                alert('操作失败');
             }
         }
 
@@ -1125,41 +1219,36 @@
                 duration = parseInt(document.getElementById('durationInput').value);
             }
 
-            if (!duration || isNaN(duration)) return alert('请选择或输入有效的时长天数');
+            if (!duration || isNaN(duration)) return alert('请输入有效时长');
 
             let permissions = null;
             if (permissionsRaw) {
                 try {
                     permissions = JSON.parse(permissionsRaw);
                     if (!permissions || typeof permissions !== 'object' || Array.isArray(permissions)) {
-                        alert('检测到权限 JSON 格式异常，请展开底层面板检查');
+                        alert('权限信息获取失败');
                         return;
                     }
                 } catch (e) {
-                    alert('权限配置存在代码语法错误');
+                    alert('权限信息格式错误');
                     return;
                 }
             }
 
             const res = await fetch(`${API_URL}?action=create`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-admin-auth': currentAuth
-                },
+                headers: { 'Content-Type': 'application/json', 'x-admin-auth': currentAuth },
                 body: JSON.stringify({ count, duration_days: duration, prefix, permissions })
             });
 
             if (res.ok) {
-                fetchKeys(1); 
-                alert(`🚀 成功为您批量生成了 ${count} 个专属激活码！`);
-            } else {
-                 alert(`生成失败，请检查系统状态`);
+                fetchKeys(1);
+                alert(`🚀 成功生成 ${count} 个激活码！`);
             }
         }
 
         async function deleteKey(id) {
-            if (!confirm('确定作废并彻底销毁该用户的这条记录吗？')) return;
+            if (!confirm('确定彻底销毁此密钥记录吗？')) return;
             const res = await fetch(`${API_URL}?action=delete&id=${id}`, { 
                 method: 'DELETE',
                 headers: { 'x-admin-auth': currentAuth }
@@ -1201,28 +1290,25 @@
             try {
                 permissions = JSON.parse(document.getElementById('modalPermissionJson').value || '{}');
                 if (!permissions || typeof permissions !== 'object' || Array.isArray(permissions)) {
-                    alert('权限配置存在代码格式异常');
+                    alert('权限数据异常');
                     return;
                 }
             } catch {
-                alert('权限代码解析失败');
+                alert('权限数据格式错误');
                 return;
             }
 
             const res = await fetch(`${API_URL}?action=update_permissions`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-auth': currentAuth
-                },
+                headers: { 'Content-Type': 'application/json', 'x-admin-auth': currentAuth },
                 body: JSON.stringify({ id, permissions })
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                alert(`更新权限进度失败: ${data.error || '遇到异常'}`);
+                alert(`更新失败: ${data.error || '未知错误'}`);
                 return;
             }
-            alert('该用户的权限套餐已更新下发！');
+            alert('权限更新成功');
             closePermissionModal();
             fetchKeys(currentPage);
         }
@@ -1239,7 +1325,6 @@
             }, 1000);
         }
 
-        // 自动登录校验
         if (currentAuth) {
             showAdmin();
             fetchKeys(1);

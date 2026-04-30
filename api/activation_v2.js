@@ -131,9 +131,26 @@ function parseBooleanFlag(value) {
 
 function sanitizeActivationData(row, includePermissions = false) {
   if (!row || typeof row !== 'object') return row;
-  if (includePermissions) return row;
   const cloned = { ...row };
+  const rawPerm = cloned.permissions;
   delete cloned.permissions;
+  if (includePermissions && rawPerm && typeof rawPerm === 'object' && !Array.isArray(rawPerm)) {
+    const p = {
+      ...(Array.isArray(rawPerm.ac) ? { ac: rawPerm.ac.filter((v) => typeof v === 'string') } : {}),
+      ai: typeof rawPerm.ai === 'boolean' ? rawPerm.ai : true,
+      cp: typeof rawPerm.cp === 'boolean' ? rawPerm.cp : true,
+      co: typeof rawPerm.co === 'boolean' ? rawPerm.co : true,
+      sy: typeof rawPerm.sy === 'boolean' ? rawPerm.sy : true,
+      ed: typeof rawPerm.ed === 'boolean' ? rawPerm.ed : true,
+      hr: typeof rawPerm.hr === 'boolean' ? rawPerm.hr : true,
+      bk: typeof rawPerm.bk === 'boolean' ? rawPerm.bk : true,
+      pl: typeof rawPerm.pl === 'boolean' ? rawPerm.pl : true,
+      fw: typeof rawPerm.fw === 'boolean' ? rawPerm.fw : true
+    };
+    cloned.p = p;
+  } else {
+    delete cloned.p;
+  }
   return cloned;
 }
 
