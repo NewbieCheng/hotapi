@@ -774,6 +774,17 @@
             'promptLibraryEnabled', 
             'floatingWidgetEnabled'
         ];
+        const SHORT_TO_LONG_PERMISSION_KEY = {
+            ai: 'aiEnabled',
+            cp: 'captureEnabled',
+            co: 'collectorEnabled',
+            sy: 'syncEnabled',
+            ed: 'editorEnabled',
+            hr: 'hotRankEnabled',
+            bk: 'backupEnabled',
+            pl: 'promptLibraryEnabled',
+            fw: 'floatingWidgetEnabled'
+        };
 
         if (window.innerWidth <= 768) currentViewMode = 'card';
 
@@ -824,8 +835,33 @@
             return data;
         }
 
+        function normalizePermissionObject(input) {
+            const raw = (input && typeof input === 'object') ? input : {};
+            const payload = (raw.p && typeof raw.p === 'object') ? raw.p : raw;
+            const normalized = {};
+
+            if (Array.isArray(payload.allowedChannels)) {
+                normalized.allowedChannels = payload.allowedChannels.filter((v) => typeof v === 'string');
+            } else if (Array.isArray(payload.ac)) {
+                normalized.allowedChannels = payload.ac.filter((v) => typeof v === 'string');
+            }
+
+            PERMISSION_KEYS.forEach((longKey) => {
+                if (typeof payload[longKey] === 'boolean') {
+                    normalized[longKey] = payload[longKey];
+                    return;
+                }
+                const shortKey = Object.keys(SHORT_TO_LONG_PERMISSION_KEY).find((k) => SHORT_TO_LONG_PERMISSION_KEY[k] === longKey);
+                if (shortKey && typeof payload[shortKey] === 'boolean') {
+                    normalized[longKey] = payload[shortKey];
+                }
+            });
+
+            return normalized;
+        }
+
         function applyPermissionObject(data, prefix = '') {
-            const source = (data && typeof data === 'object') ? data : {};
+            const source = normalizePermissionObject(data);
             
             // 回显布尔值权限，如果旧版不包含该 key，默认为 true 兼容老版本逻辑
             PERMISSION_KEYS.forEach((key) => {
