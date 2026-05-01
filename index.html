@@ -94,6 +94,82 @@
     const jsonResult = document.getElementById('jsonResult');
     const statusBadge = document.getElementById('statusBadge');
     const timeBadge = document.getElementById('timeBadge');
+    const PERMISSION_LABELS = {
+        ac: 'allowedChannels（允许的平台）',
+        ai: 'aiEnabled（AI 能力）',
+        cp: 'captureEnabled（页面抓取）',
+        co: 'collectorEnabled（平台采集中心）',
+        sy: 'syncEnabled（内容同步发布）',
+        ed: 'editorEnabled（中转编辑器）',
+        hr: 'hotRankEnabled（热搜榜）',
+        bk: 'backupEnabled（本地备份）',
+        pl: 'promptLibraryEnabled（提示词库）',
+        fw: 'floatingWidgetEnabled（页面悬浮组件）'
+    };
+
+    const CHANNEL_LABELS = {
+        xiaohongshu: '小红书',
+        douyin: '抖音',
+        weixin: '微信生态',
+        juejin: '掘金',
+        zhihu: '知乎',
+        toutiao: '今日头条',
+        weibo: '微博',
+        bilibili: 'B站'
+    };
+
+    function pickPermissionPayload(raw) {
+        if (!raw || typeof raw !== 'object') return null;
+        if (raw.p && typeof raw.p === 'object') return raw.p;
+        if (
+            Object.prototype.hasOwnProperty.call(raw, 'ac') ||
+            Object.prototype.hasOwnProperty.call(raw, 'ai') ||
+            Object.prototype.hasOwnProperty.call(raw, 'cp') ||
+            Object.prototype.hasOwnProperty.call(raw, 'co') ||
+            Object.prototype.hasOwnProperty.call(raw, 'sy') ||
+            Object.prototype.hasOwnProperty.call(raw, 'ed') ||
+            Object.prototype.hasOwnProperty.call(raw, 'hr') ||
+            Object.prototype.hasOwnProperty.call(raw, 'bk') ||
+            Object.prototype.hasOwnProperty.call(raw, 'pl') ||
+            Object.prototype.hasOwnProperty.call(raw, 'fw')
+        ) {
+            return raw;
+        }
+        return null;
+    }
+
+    function buildParsedPermissions(permissionPayload) {
+        if (!permissionPayload || typeof permissionPayload !== 'object') return null;
+        const parsed = {};
+        const channels = permissionPayload.ac;
+        parsed[PERMISSION_LABELS.ac] = Array.isArray(channels)
+            ? channels.map((id) => ({
+                id,
+                name: CHANNEL_LABELS[id] || id
+            }))
+            : '全部平台（未配置 ac）';
+
+        ['ai', 'cp', 'co', 'sy', 'ed', 'hr', 'bk', 'pl', 'fw'].forEach((key) => {
+            const label = PERMISSION_LABELS[key];
+            if (typeof permissionPayload[key] === 'boolean') {
+                parsed[label] = permissionPayload[key] ? '已开启' : '未开启';
+            } else {
+                parsed[label] = '已开启（未配置该字段，按默认值处理）';
+            }
+        });
+
+        return parsed;
+    }
+
+    function withPermissionHints(responseData) {
+        const permissionPayload = pickPermissionPayload(responseData);
+        if (!permissionPayload) return responseData;
+        const parsedPermissions = buildParsedPermissions(permissionPayload);
+        return {
+            ...responseData,
+            __parsedPermissions: parsedPermissions
+        };
+    }
 
     // 自动设置当前域名的 API 地址
     proxyUrlInput.value = `${window.location.origin}/api/proxy`;
@@ -165,7 +241,8 @@
                 statusBadge.textContent = `Status: ${response.status}`;
             }
 
-            jsonResult.textContent = JSON.stringify(data, null, 4);
+            const displayData = withPermissionHints(data);
+            jsonResult.textContent = JSON.stringify(displayData, null, 4);
         } catch (error) {
             statusBadge.className = 'badge bg-danger status-badge';
             statusBadge.textContent = 'Error';
