@@ -204,12 +204,19 @@ export interface XhsSearchRequest {
 - **前缀**: 仅接受 `CJZS-` 开头激活码（与 FlowX 的 `XHS-` 等互斥）
 - **请求体**: `{ "key": "CJZS-...", "device_id": "...", "include_permissions": true }`
 - **响应**: 加密 JSON `{ "e", "i" }`，解密后与 `activation_v2` 相同盐值（`device_id + API_SALT`）
-- **解密后 `data.user`**: `{ name, email, vips: string[], isVip: boolean }`（`vips` 来自 `permissions.ac`，缺省为全平台）
+- **解密后 `data.user`**: `{ name, email, vips: string[], level: "plus"|"pro"|"ultra", isVip: boolean, isPro: boolean, isSvip: boolean }`（`isSvip` 与 `isPro` 同义，兼容旧客户端）
+- **解密后 `data.user_level`**: 与 `data.user.level` 相同
+- **`vips`** 来自 `permissions.ac`，缺省为全平台
+- **`level`** 来自 `permissions.level`，缺省为 **`plus`**（有平台权限时）；兼容旧值 `vip`→`plus`、`svip`→`pro`
+- **Plus**：平台采集 + 自定义飞书密钥（custom）
+- **Pro**：Plus + RPA、异常跳过、飞书无限额、平台飞书密钥（smzs）等高级能力
+- **Ultra**：预留后续新功能（当前与 Plus 相同门控，无额外能力）
 - **权限 JSON 示例**（admin 生成时）:
 
 ```json
 {
-  "ac": ["xiaohongshu", "douyin", "bilibili", "kuaishou", "tiktok", "xingtu", "pgy.xiaohongshu"]
+  "ac": ["xiaohongshu", "douyin"],
+  "level": "pro"
 }
 ```
 
@@ -250,7 +257,7 @@ Body: {
   "count": 5,
   "duration_days": 30,
   "prefix": "CJZS",
-  "permissions": { "ac": ["xiaohongshu"] }
+  "permissions": { "ac": ["xiaohongshu"], "level": "plus" }
 }
 ```
 
@@ -267,11 +274,27 @@ Body: {
 }
 ```
 
+### 更新采集助手等级（仅 CJZS）
+
+```
+POST /api/activation?action=update_level
+Header: x-admin-auth: ***
+Body: {
+  "id": "uuid",
+  "level": "plus",
+  "plugin": "cjzs"
+}
+```
+
+- `level` 取值：`plus` | `pro` | `ultra`（兼容旧值 `vip`→`plus`、`svip`→`pro`）
+- 与 `permissions.ac` 合并写入，不覆盖已选平台列表
+
 ### 其他管理 action
 
 | action | 方法 | Body |
 |--------|------|------|
-| `update_permissions` | POST | `{ id, permissions, plugin? }` |
+| `update_permissions` | POST | `{ id, permissions, plugin? }`（CJZS 的 `permissions` 含 `ac` + `level`） |
+| `update_level` | POST | `{ id, level, plugin: "cjzs" }` |
 | `batch_delete` | POST | `{ ids: [] }` |
 | `delete` | DELETE | `?id=` |
 

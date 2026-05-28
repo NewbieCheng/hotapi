@@ -5,7 +5,8 @@ import { redis } from './cache_system.js';
 import {
   CJZS_PREFIX,
   assertCjzsKey,
-  assertNotCjzsKey
+  assertNotCjzsKey,
+  normalizeCjzsLevel
 } from './_activation_core.js';
 
 dotenv.config();
@@ -112,12 +113,14 @@ function normalizeCjzsPermissions(input) {
     }
   }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const ac = Array.isArray(raw.ac)
-    ? raw.ac.filter((v) => typeof v === 'string')
-    : Array.isArray(raw.allowedChannels)
-      ? raw.allowedChannels.filter((v) => typeof v === 'string')
+  const payload = raw.p && typeof raw.p === 'object' ? { ...raw.p, ...raw } : raw;
+  const ac = Array.isArray(payload.ac)
+    ? payload.ac.filter((v) => typeof v === 'string')
+    : Array.isArray(payload.allowedChannels)
+      ? payload.allowedChannels.filter((v) => typeof v === 'string')
       : [];
-  return { ac };
+  const level = normalizeCjzsLevel(payload.level);
+  return { ac, level };
 }
 
 function applyPluginFilter(query, plugin) {
@@ -317,6 +320,39 @@ export default async function handler(req, res) {
           .single();
         if (error) return res.status(500).json({ error: "更新权限失败", details: error.message });
         return res.status(200).json({ message: "权限更新成功", data });
+      }
+
+      if (action === "update_level") {
+        const { id, level, plugin } = body;
+        if (plugin !== 'cjzs') {
+          return res.status(400).json({ error: "仅采集助手（CJZS）激活码支持等级字段" });
+        }
+        if (!id) return res.status(400).json({ error: "缺少 id" });
+        const { data: existing, error: fetchError } = await supabase
+          .from('activation_keys')
+          .select('id, key, permissions')
+          .eq('id', id)
+          .single();
+        if (fetchError || !existing) {
+          return res.status(404).json({ error: "激活码不存在" });
+        }
+        const keyCheck = assertCjzsKey(existing.key);
+        if (!keyCheck.ok) return res.status(400).json({ error: keyCheck.error });
+        const merged = normalizeCjzsPermissions({
+          ...(existing.permissions && typeof existing.permissions === 'object' ? existing.permissions : {}),
+          level
+        });
+        if (!merged) {
+          return res.status(400).json({ error: "等级无效" });
+        }
+        const { data, error } = await supabase
+          .from('activation_keys')
+          .update({ permissions: merged })
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) return res.status(500).json({ error: "更新等级失败", details: error.message });
+        return res.status(200).json({ message: "等级更新成功", data });
       }
 
       // 5. 批量删除

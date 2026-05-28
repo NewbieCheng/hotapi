@@ -73,6 +73,7 @@ export function sanitizeActivationData(row, includePermissions = false) {
   if (includePermissions && rawPerm && typeof rawPerm === 'object' && !Array.isArray(rawPerm)) {
     const p = {
       ...(Array.isArray(rawPerm.ac) ? { ac: rawPerm.ac.filter((v) => typeof v === 'string') } : {}),
+      ...(rawPerm.level != null && rawPerm.level !== '' ? { level: String(rawPerm.level) } : {}),
       ai: typeof rawPerm.ai === 'boolean' ? rawPerm.ai : true,
       cp: typeof rawPerm.cp === 'boolean' ? rawPerm.cp : true,
       co: typeof rawPerm.co === 'boolean' ? rawPerm.co : true,
@@ -104,6 +105,14 @@ export function assertNotCjzsKey(key) {
   return { ok: true };
 }
 
+export function normalizeCjzsLevel(raw) {
+  const s = String(raw ?? '').trim().toLowerCase();
+  if (s === 'pro' || s === 'svip') return 'pro';
+  if (s === 'ultra') return 'ultra';
+  if (s === 'plus' || s === 'vip') return 'plus';
+  return 'plus';
+}
+
 export function buildCjzsUser(row, includePermissions = true) {
   const expired = !row?.expires_at || new Date(row.expires_at).getTime() < Date.now();
   const rawPerm = row?.permissions;
@@ -115,11 +124,18 @@ export function buildCjzsUser(row, includePermissions = true) {
     else if (Array.isArray(acFromPerm) && acFromPerm.length) vips = acFromPerm;
   }
   if (expired) vips = [];
+  const levelRaw = row?.p?.level ?? row?.permissions?.level ?? row?.user_level;
+  const level = vips.length > 0 ? normalizeCjzsLevel(levelRaw) : 'plus';
+  const isVip = !expired && vips.length > 0;
+  const isPro = isVip && level === 'pro';
   return {
     name: row?.user_name || row?.note || '已激活用户',
     email: row?.user_email || row?.key || '',
     vips,
-    isVip: !expired && vips.length > 0
+    level,
+    isVip,
+    isPro,
+    isSvip: isPro
   };
 }
 
@@ -127,5 +143,6 @@ export function sanitizeCjzsActivationData(row, includePermissions = false) {
   const base = sanitizeActivationData(row, includePermissions);
   if (!base) return base;
   base.user = buildCjzsUser({ ...row, p: base.p }, includePermissions);
+  base.user_level = base.user.level;
   return base;
 }

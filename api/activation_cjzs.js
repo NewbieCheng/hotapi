@@ -9,6 +9,7 @@ import {
   sanitizeCjzsActivationData
 } from './_activation_core.js';
 
+/** 激活码 permissions JSON：`{ ac: string[], level: 'plus'|'pro'|'ultra' }`，由 admin 维护 */
 dotenv.config();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;

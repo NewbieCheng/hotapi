@@ -387,6 +387,23 @@
             font-size: 12px; font-weight: 500; color: var(--muted); transition: all 0.2s;
         }
         .platform-chip:hover .chip-content { background: rgba(255, 255, 255, 0.05); }
+        .cjzs-level-options { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+        .level-chip { cursor: pointer; user-select: none; }
+        .level-chip input[type="radio"] { display: none; }
+        .level-chip .chip-content {
+            display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--muted);
+            transition: all 0.2s;
+        }
+        .level-chip:hover .chip-content { background: rgba(255,255,255,0.06); color: #fff; }
+        .level-chip input:checked + .chip-content { color: #fff; border-color: transparent; }
+        .level-chip input[value="plus"]:checked + .chip-content { background: rgba(212,167,44,0.2); box-shadow: 0 0 0 1px rgba(212,167,44,0.35); }
+        .level-chip input[value="pro"]:checked + .chip-content { background: rgba(147,51,234,0.2); box-shadow: 0 0 0 1px rgba(147,51,234,0.35); }
+        .level-chip input[value="ultra"]:checked + .chip-content { background: rgba(59,130,246,0.2); box-shadow: 0 0 0 1px rgba(59,130,246,0.35); }
+        .badge.level-plus { background: rgba(212,167,44,0.15); color: #d4a72c; }
+        .badge.level-pro { background: rgba(147,51,234,0.15); color: #a855f7; }
+        .badge.level-ultra { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        body.plugin-cjzs .cjzs-level-options.cjzs-only { display: flex !important; }
         .platform-chip input[type="checkbox"]:checked + .chip-content {
             background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.5);
             color: #60a5fa; box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
@@ -619,6 +636,7 @@
                                     <th>设备码</th>
                                     <th>有效期</th>
                                     <th>当前状态</th>
+                                    <th class="cjzs-only">等级</th>
                                     <th>权限</th>
                                     <th>过期时间</th>
                                     <th>操作</th>
@@ -678,7 +696,10 @@
                         <div class="permission-quick-templates cjzs-only">
                             <button class="action-btn mini" type="button" onclick="applyCjzsTemplate('all')"><i class="fas fa-star"></i> 全平台</button>
                             <button class="action-btn mini" type="button" onclick="applyCjzsTemplate('cn')"><i class="fas fa-flag"></i> 国内主流</button>
+                            <button class="action-btn mini" type="button" onclick="applyCjzsTemplate('pro')"><i class="fas fa-crown"></i> 全平台 Pro</button>
                         </div>
+                        <label class="form-label cjzs-only" style="margin-top: 8px;">用户等级</label>
+                        <div class="cjzs-level-options cjzs-only" id="generateCjzsLevels"></div>
                         <div class="permission-grid flowx-only">
                             <label class="permission-toggle"><span class="perm-title">AI创作助手</span><input type="checkbox" id="perm_aiEnabled" checked></label>
                             <label class="permission-toggle"><span class="perm-title">单篇内容抓取</span><input type="checkbox" id="perm_captureEnabled" checked></label>
@@ -742,6 +763,15 @@
                             <select id="optCjzsTemplate" class="input-control">
                                 <option value="all">全平台</option>
                                 <option value="cn">国内主流</option>
+                                <option value="pro">全平台 Pro</option>
+                            </select>
+                        </div>
+                        <div class="options-card cjzs-only">
+                            <label class="form-label">默认用户等级</label>
+                            <select id="optCjzsLevel" class="input-control">
+                                <option value="plus">Plus（平台 + 自定义飞书）</option>
+                                <option value="pro">Pro（高级采集能力）</option>
+                                <option value="ultra">Ultra（预留）</option>
                             </select>
                         </div>
                         <button class="btn-primary" onclick="savePluginOptions()"><i class="fas fa-save"></i> 保存插件选项</button>
@@ -797,7 +827,10 @@
                 <div class="permission-quick-templates cjzs-only">
                     <button class="action-btn mini" type="button" onclick="applyCjzsTemplateToModal('all')"><i class="fas fa-star"></i> 全平台</button>
                     <button class="action-btn mini" type="button" onclick="applyCjzsTemplateToModal('cn')"><i class="fas fa-flag"></i> 国内主流</button>
+                    <button class="action-btn mini" type="button" onclick="applyCjzsTemplateToModal('pro')"><i class="fas fa-crown"></i> 全平台 Pro</button>
                 </div>
+                <label class="form-label cjzs-only" style="margin-top: 8px;">用户等级</label>
+                <div class="cjzs-level-options cjzs-only" id="modalCjzsLevels"></div>
                 
                 <label class="form-label flowx-only" style="margin-top: 5px;">单项功能开关</label>
                 <div class="permission-grid flowx-only">
@@ -872,12 +905,36 @@
         </div>
     </div>
 
+    <!-- 弹窗：快速修改等级 -->
+    <div id="levelEditModal" class="permission-modal">
+        <div class="permission-modal-card" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-layer-group"></i> 修改用户等级</h3>
+                <button class="close-btn" onclick="closeLevelModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="hidden" id="levelEditId">
+            <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">仅影响采集助手（CJZS）激活码，保存后客户端下次校验时生效。</p>
+            <div class="cjzs-level-options" id="levelEditOptions"></div>
+            <div class="permission-modal-actions" style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 20px; padding-top: 15px;">
+                <button class="action-btn" type="button" onclick="closeLevelModal()">取消</button>
+                <button class="btn-primary" style="width:auto;padding:10px 24px;" type="button" onclick="saveLevelModal()">
+                    <i class="fas fa-cloud-arrow-up"></i> 保存等级
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
 const PLUGINS = {
     flowx: { id: 'flowx', label: 'FlowX', prefix: 'XHS', listPlugin: 'flowx' },
     cjzs: { id: 'cjzs', label: '采集助手', prefix: 'CJZS', listPlugin: 'cjzs' }
 };
 const CJZS_PLATFORMS = ['xiaohongshu', 'douyin', 'bilibili', 'kuaishou', 'tiktok', 'xingtu', 'pgy.xiaohongshu'];
+const CJZS_LEVELS = [
+    { value: 'plus', label: 'Plus', hint: '平台采集 + 自定义飞书' },
+    { value: 'pro', label: 'Pro', hint: 'Plus + RPA / 高级能力' },
+    { value: 'ultra', label: 'Ultra', hint: '预留后续新功能' }
+];
 const PERMISSION_KEYS = [
     'aiEnabled', 'captureEnabled', 'collectorEnabled', 'syncEnabled', 'editorEnabled',
     'hotRankEnabled', 'backupEnabled', 'promptLibraryEnabled', 'floatingWidgetEnabled'
@@ -940,8 +997,12 @@ function updatePluginUi() {
     const badge = document.getElementById('listPluginBadge');
     badge.textContent = cfg.label;
     badge.className = 'plugin-badge' + (activePlugin === 'cjzs' ? ' cjzs' : '');
-    if (isCjzsPlugin()) applyCjzsTemplate('all');
-    else applyPermissionTemplate('all');
+    if (isCjzsPlugin()) {
+        applyCjzsTemplate('all');
+        renderCjzsLevelRadios('generateCjzsLevels', '', 'plus');
+        renderCjzsLevelRadios('modalCjzsLevels', 'modal_', 'plus');
+        renderCjzsLevelRadios('levelEditOptions', 'edit_', 'plus');
+    } else applyPermissionTemplate('all');
 }
 
 function formatExpiresAt(iso) { return iso ? String(iso) : '-'; }
@@ -954,9 +1015,61 @@ function toDatetimeLocalValue(iso) {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
+function normalizeCjzsLevelUi(raw) {
+    const s = String(raw ?? '').trim().toLowerCase();
+    if (s === 'pro' || s === 'svip') return 'pro';
+    if (s === 'ultra') return 'ultra';
+    if (s === 'plus' || s === 'vip') return 'plus';
+    return 'plus';
+}
+
+function cjzsLevelFieldName(prefix = '') {
+    if (prefix === 'modal_') return 'modal_cjzsLevel';
+    if (prefix === 'edit_') return 'edit_cjzsLevel';
+    return 'cjzsLevel';
+}
+
+function renderCjzsLevelRadios(containerId, prefix = '', selected = 'plus') {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const name = cjzsLevelFieldName(prefix);
+    const lv = normalizeCjzsLevelUi(selected);
+    el.innerHTML = CJZS_LEVELS.map((item) => `
+        <label class="level-chip" title="${escapeHtml(item.hint)}">
+            <input type="radio" name="${name}" value="${item.value}" ${item.value === lv ? 'checked' : ''}>
+            <span class="chip-content">${escapeHtml(item.label)}</span>
+        </label>
+    `).join('');
+}
+
+function getCjzsLevelFromForm(prefix = '') {
+    const name = cjzsLevelFieldName(prefix);
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return normalizeCjzsLevelUi(checked ? checked.value : 'plus');
+}
+
+function setCjzsLevelOnForm(prefix, level) {
+    const name = cjzsLevelFieldName(prefix);
+    const lv = normalizeCjzsLevelUi(level);
+    document.querySelectorAll(`input[name="${name}"]`).forEach((el) => { el.checked = el.value === lv; });
+}
+
+function resolveCjzsLevelFromPermissions(permissions) {
+    if (!permissions || typeof permissions !== 'object') return 'plus';
+    const payload = permissions.p && typeof permissions.p === 'object' ? permissions.p : permissions;
+    return normalizeCjzsLevelUi(payload.level);
+}
+
+function formatCjzsLevelBadge(permissions) {
+    const lv = resolveCjzsLevelFromPermissions(permissions);
+    const meta = CJZS_LEVELS.find((x) => x.value === lv) || CJZS_LEVELS[0];
+    return `<span class="badge level-${lv}" title="${escapeHtml(meta.hint)}">${escapeHtml(meta.label)}</span>`;
+}
+
 function cjzsTemplateByName(name) {
-    if (name === 'cn') return { ac: ['xiaohongshu', 'douyin', 'bilibili', 'kuaishou'] };
-    return { ac: [...CJZS_PLATFORMS] };
+    if (name === 'cn') return { ac: ['xiaohongshu', 'douyin', 'bilibili', 'kuaishou'], level: 'plus' };
+    if (name === 'pro') return { ac: [...CJZS_PLATFORMS], level: 'pro' };
+    return { ac: [...CJZS_PLATFORMS], level: 'plus' };
 }
 
 function applyCjzsAcList(acList, selector) {
@@ -967,7 +1080,11 @@ function applyCjzsAcList(acList, selector) {
 
 function buildCjzsPermissionObject(prefix = '') {
     const selector = prefix === 'modal_' ? '.modal-perm-cjzs-ac' : '.perm-cjzs-ac';
-    return { ac: Array.from(document.querySelectorAll(selector)).filter((el) => el.checked).map((el) => el.value) };
+    const levelPrefix = prefix === 'modal_' ? 'modal_' : '';
+    return {
+        ac: Array.from(document.querySelectorAll(selector)).filter((el) => el.checked).map((el) => el.value),
+        level: getCjzsLevelFromForm(levelPrefix)
+    };
 }
 
 function applyCjzsObject(data, prefix = '') {
@@ -975,11 +1092,20 @@ function applyCjzsObject(data, prefix = '') {
     const payload = (raw.p && typeof raw.p === 'object') ? raw.p : raw;
     const ac = Array.isArray(payload.ac) ? payload.ac : (Array.isArray(payload.allowedChannels) ? payload.allowedChannels : null);
     applyCjzsAcList(ac, prefix === 'modal_' ? '.modal-perm-cjzs-ac' : '.perm-cjzs-ac');
+    setCjzsLevelOnForm(prefix === 'modal_' ? 'modal_' : '', payload.level || 'plus');
 }
 
-function applyCjzsTemplate(name) { applyCjzsObject(cjzsTemplateByName(name)); syncPermissionJsonFromBuilder(); }
+function applyCjzsTemplate(name) {
+    const tpl = cjzsTemplateByName(name);
+    applyCjzsObject(tpl);
+    setCjzsLevelOnForm('', tpl.level || 'plus');
+    renderCjzsLevelRadios('generateCjzsLevels', '', tpl.level || 'plus');
+    syncPermissionJsonFromBuilder();
+}
 function applyCjzsTemplateToModal(name) {
-    applyCjzsObject(cjzsTemplateByName(name), 'modal_');
+    const tpl = cjzsTemplateByName(name);
+    applyCjzsObject(tpl, 'modal_');
+    renderCjzsLevelRadios('modalCjzsLevels', 'modal_', tpl.level || 'plus');
     document.getElementById('modalPermissionJson').value = JSON.stringify(buildCjzsPermissionObject('modal_'), null, 2);
 }
 
@@ -1047,6 +1173,12 @@ function bindPermissionBuilderEvents() {
             document.getElementById('modalPermissionJson').value = JSON.stringify(isCjzsPlugin() ? buildCjzsPermissionObject('modal_') : buildPermissionObject('modal_'), null, 2);
         });
     });
+    document.addEventListener('change', (e) => {
+        if (!e.target.matches('input[name="cjzsLevel"], input[name="modal_cjzsLevel"]')) return;
+        if (e.target.name === 'modal_cjzsLevel') {
+            document.getElementById('modalPermissionJson').value = JSON.stringify(buildCjzsPermissionObject('modal_'), null, 2);
+        } else syncPermissionJsonFromBuilder();
+    });
     document.getElementById('expiresEditLocal')?.addEventListener('change', (e) => {
         const d = new Date(e.target.value);
         if (!Number.isNaN(d.getTime())) {
@@ -1090,6 +1222,9 @@ function loadPluginOptions() {
         if (prefs.defaultBatch) document.getElementById('optDefaultBatch').value = prefs.defaultBatch;
         if (prefs.flowxTemplate) document.getElementById('optFlowxTemplate').value = prefs.flowxTemplate;
         if (prefs.cjzsTemplate) document.getElementById('optCjzsTemplate').value = prefs.cjzsTemplate;
+        if (prefs.cjzsLevel && document.getElementById('optCjzsLevel')) {
+            document.getElementById('optCjzsLevel').value = normalizeCjzsLevelUi(prefs.cjzsLevel);
+        }
     } catch (_) {}
 }
 
@@ -1098,7 +1233,8 @@ function savePluginOptions() {
         defaultDuration: parseInt(document.getElementById('optDefaultDuration').value) || 30,
         defaultBatch: parseInt(document.getElementById('optDefaultBatch').value) || 1,
         flowxTemplate: document.getElementById('optFlowxTemplate')?.value,
-        cjzsTemplate: document.getElementById('optCjzsTemplate')?.value
+        cjzsTemplate: document.getElementById('optCjzsTemplate')?.value,
+        cjzsLevel: document.getElementById('optCjzsLevel')?.value
     };
     localStorage.setItem(`admin_prefs_${activePlugin}`, JSON.stringify(prefs));
     alert('插件选项已保存');
@@ -1113,8 +1249,11 @@ function applyPluginOptionsToGenerate() {
     document.getElementById('batchCount').value = prefs.defaultBatch || 1;
     document.querySelectorAll('.duration-item').forEach((item) => item.classList.toggle('active', parseInt(item.dataset.days) === duration));
     document.getElementById('durationInput').style.display = 'none';
-    if (isCjzsPlugin()) applyCjzsTemplate(prefs.cjzsTemplate || 'all');
-    else applyPermissionTemplate(prefs.flowxTemplate || 'all');
+    if (isCjzsPlugin()) {
+        applyCjzsTemplate(prefs.cjzsTemplate || 'all');
+        setCjzsLevelOnForm('', prefs.cjzsLevel || 'plus');
+        renderCjzsLevelRadios('generateCjzsLevels', '', prefs.cjzsLevel || 'plus');
+    } else applyPermissionTemplate(prefs.flowxTemplate || 'all');
 }
 
 function isNarrowViewport() {
@@ -1234,8 +1373,9 @@ function escapeHtml(str) {
 
 function renderKeys(data) {
     const list = document.getElementById('keyList');
+    const colSpan = isCjzsPlugin() ? 9 : 8;
     if (!data || !data.length) {
-        list.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">暂无数据</td></tr>';
+        list.innerHTML = `<tr><td colspan="${colSpan}" style="text-align:center;padding:20px;color:var(--muted)">暂无数据</td></tr>`;
         return;
     }
     list.innerHTML = data.map((item) => {
@@ -1246,12 +1386,17 @@ function renderKeys(data) {
         const isSelected = selectedIds.has(item.id);
         const permEnc = encodeURIComponent(JSON.stringify(item.permissions || null));
         const expiresEnc = encodeURIComponent(item.expires_at || '');
+        const levelEnc = encodeURIComponent(resolveCjzsLevelFromPermissions(item.permissions));
+        const levelCell = isCjzsPlugin()
+            ? `<td data-label="等级"><button class="action-btn mini" type="button" onclick='editLevel("${item.id}", "${levelEnc}")'>${formatCjzsLevelBadge(item.permissions)}</button></td>`
+            : '';
         return `<tr class="${isSelected ? 'selected' : ''}" onclick="handleRowClick(event, '${item.id}')" data-id="${item.id}">
             <td data-label="选择" style="text-align:center"><input type="checkbox" class="key-checkbox" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="toggleSelect('${item.id}')"></td>
             <td data-label="激活密钥"><div class="code-wrapper"><span class="key-code">${escapeHtml(item.key)}</span><button class="action-btn mini" onclick="copyText('${escapeHtml(item.key)}')"><i class="far fa-copy"></i></button></div></td>
             <td data-label="设备码">${item.device_id ? `<div class="code-wrapper"><span class="device-code">${escapeHtml(item.device_id)}</span><button class="action-btn mini" onclick="copyText('${escapeHtml(item.device_id)}')"><i class="far fa-copy"></i></button></div>` : '<span style="color:var(--muted)">-</span>'}</td>
             <td data-label="有效期">${item.duration_days >= 9999 ? '永久' : item.duration_days + '天'}</td>
             <td data-label="当前状态"><span class="badge ${statusClass}">${statusText}</span></td>
+            ${levelCell}
             <td data-label="权限"><button class="action-btn mini" onclick='editPermissions("${item.id}", "${permEnc}")'><i class="fas fa-shield-halved"></i></button></td>
             <td data-label="过期时间"><div class="expires-cell">${escapeHtml(formatExpiresAt(item.expires_at))}</div><button class="action-btn mini" onclick='editExpires("${item.id}", "${expiresEnc}")'><i class="fas fa-clock"></i></button></td>
             <td data-label="操作"><button class="action-btn delete" onclick="deleteKey('${item.id}')"><i class="far fa-trash-can"></i></button></td>
@@ -1354,7 +1499,9 @@ function applyPermissionTemplateToModal(name) {
 function openPermissionModal(id, permissionsObj) {
     document.getElementById('permissionEditId').value = id;
     if (isCjzsPlugin()) {
-        applyCjzsObject(permissionsObj || cjzsTemplateByName('all'), 'modal_');
+        const base = permissionsObj || cjzsTemplateByName('all');
+        applyCjzsObject(base, 'modal_');
+        renderCjzsLevelRadios('modalCjzsLevels', 'modal_', base.level || 'plus');
         document.getElementById('modalPermissionJson').value = JSON.stringify(buildCjzsPermissionObject('modal_'), null, 2);
     } else {
         applyPermissionObject(permissionsObj || permissionTemplateByName('all'), 'modal_');
@@ -1369,6 +1516,32 @@ async function editPermissions(id, encodedCurrentPermissions) {
     let permissionsObj = null;
     try { permissionsObj = JSON.parse(decodeURIComponent(encodedCurrentPermissions || '') || 'null'); } catch (_) {}
     openPermissionModal(id, permissionsObj);
+}
+
+function editLevel(id, encodedLevel) {
+    let level = 'plus';
+    try { level = decodeURIComponent(encodedLevel || 'plus'); } catch (_) {}
+    document.getElementById('levelEditId').value = id;
+    renderCjzsLevelRadios('levelEditOptions', 'edit_', level);
+    document.getElementById('levelEditModal').classList.add('show');
+}
+
+function closeLevelModal() { document.getElementById('levelEditModal').classList.remove('show'); }
+
+async function saveLevelModal() {
+    const id = document.getElementById('levelEditId').value;
+    if (!id) return;
+    const level = getCjzsLevelFromForm('edit_');
+    const res = await fetch(`${getApiUrl()}?action=update_level`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-auth': currentAuth },
+        body: JSON.stringify({ id, level, plugin: 'cjzs' })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return alert(`更新失败: ${data.error || '未知错误'}`);
+    alert('等级更新成功');
+    closeLevelModal();
+    fetchKeys(currentPage);
 }
 
 async function savePermissionModal() {
