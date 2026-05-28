@@ -195,3 +195,20 @@ export interface XhsSearchRequest {
 
 1. **缓存机制**: 接口响应结果会缓存 1 小时。如果未搜索到数据，不会写入缓存。
 2. **错误处理**: 如果上游接口返回错误或解析失败，可能会返回原始数据或错误信息。
+
+---
+
+## 采集助手激活码 API（CJZS）
+
+- **地址**: `POST https://abc.no996ai.cn/api/activation_cjzs?action=activate|verify`
+- **前缀**: 仅接受 `CJZS-` 开头激活码（与 FlowX 的 `XHS-` 等互斥）
+- **请求体**: `{ "key": "CJZS-...", "device_id": "...", "include_permissions": true }`
+- **响应**: 加密 JSON `{ "e", "i" }`，解密后与 `activation_v2` 相同盐值（`device_id + API_SALT`）
+- **解密后 `data.user`**: `{ name, email, vips: string[], isVip: boolean }`（`vips` 来自 `permissions.ac`，缺省为全平台）
+- **权限 JSON 示例**（admin 生成时）:
+
+```json
+{
+  "ac": ["xiaohongshu", "douyin", "bilibili", "kuaishou", "tiktok", "xingtu", "pgy.xiaohongshu"]
+}
+```

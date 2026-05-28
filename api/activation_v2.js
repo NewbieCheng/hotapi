@@ -262,6 +262,9 @@ export default async function handler(req, res) {
       // 1. 验证激活码 (用户端 - 无需后台鉴权)
       if (action === "verify") {
         const { key, device_id, include_permissions } = body;
+        if (key && String(key).toUpperCase().startsWith('CJZS-')) {
+          return res.status(200).json(encryptPayload({ success: false, error: '该激活码不适用于 FlowX 插件' }, device_id));
+        }
         const includePermissions = parseBooleanFlag(include_permissions);
         const { data, error } = await supabase
           .from('activation_keys')
@@ -285,6 +288,9 @@ export default async function handler(req, res) {
       // 2. 激活 (支持设备码校验)
       if (action === "activate") {
         const { key, device_id, include_permissions } = body;
+        if (key && String(key).toUpperCase().startsWith('CJZS-')) {
+          return res.status(200).json(encryptPayload({ success: false, error: '该激活码不适用于 FlowX 插件' }, device_id));
+        }
         const includePermissions = parseBooleanFlag(include_permissions);
         
         const { data: keyData, error: fetchError } = await supabase
