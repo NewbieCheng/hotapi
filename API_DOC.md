@@ -212,3 +212,67 @@ export interface XhsSearchRequest {
   "ac": ["xiaohongshu", "douyin", "bilibili", "kuaishou", "tiktok", "xingtu", "pgy.xiaohongshu"]
 }
 ```
+
+---
+
+## 管理端 API（admin.html 专用）
+
+**基址**: `https://abc.no996ai.cn/api/activation`  
+**鉴权**: 请求头 `x-admin-auth: <ADMIN_PASSWORD>`
+
+### 登录
+
+```
+POST /api/activation?action=login
+Body: { "password": "..." }
+```
+
+### 列表（支持插件筛选）
+
+```
+GET /api/activation?action=list&page=1&pageSize=10&plugin=flowx|cjzs|all
+Header: x-admin-auth: ***
+```
+
+| 参数 | 说明 |
+|------|------|
+| `plugin=flowx` | 排除 `CJZS-` 前缀 |
+| `plugin=cjzs` | 仅 `CJZS-%` |
+| `plugin=all` 或省略 | 全量 |
+| `key`, `device_id`, `is_used`, `duration_days` | 筛选 |
+
+### 创建激活码
+
+```
+POST /api/activation?action=create
+Body: {
+  "plugin": "cjzs",
+  "count": 5,
+  "duration_days": 30,
+  "prefix": "CJZS",
+  "permissions": { "ac": ["xiaohongshu"] }
+}
+```
+
+- `plugin=cjzs` 强制 prefix 为 `CJZS`
+- `plugin=flowx` 拒绝 `CJZS` 前缀
+
+### 更新过期时间（精确 ISO8601）
+
+```
+POST /api/activation?action=update_expires_at
+Body: {
+  "id": "uuid",
+  "expires_at": "2026-05-01T08:46:02.161624+00:00"
+}
+```
+
+### 其他管理 action
+
+| action | 方法 | Body |
+|--------|------|------|
+| `update_permissions` | POST | `{ id, permissions, plugin? }` |
+| `batch_delete` | POST | `{ ids: [] }` |
+| `delete` | DELETE | `?id=` |
+
+详见 [`agent.md`](agent.md)。

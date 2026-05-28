@@ -2,6 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
 import { redis } from './cache_system.js';
+import {
+  CJZS_PREFIX,
+  assertCjzsKey,
+  assertNotCjzsKey
+} from './_activation_core.js';
 
 dotenv.config();
 
@@ -94,6 +99,60 @@ function normalizePermissions(input) {
     pl: toBool(raw.pl ?? raw.promptLibraryEnabled, true),
     fw: toBool(raw.fw ?? raw.floatingWidgetEnabled, true)
   };
+}
+
+function normalizeCjzsPermissions(input) {
+  if (!input) return null;
+  let raw = input;
+  if (typeof input === 'string') {
+    try {
+      raw = JSON.parse(input);
+    } catch {
+      return null;
+    }
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const ac = Array.isArray(raw.ac)
+    ? raw.ac.filter((v) => typeof v === 'string')
+    : Array.isArray(raw.allowedChannels)
+      ? raw.allowedChannels.filter((v) => typeof v === 'string')
+      : [];
+  return { ac };
+}
+
+function applyPluginFilter(query, plugin) {
+  if (plugin === 'cjzs') return query.ilike('key', `${CJZS_PREFIX}%`);
+  if (plugin === 'flowx') return query.not('key', 'ilike', `${CJZS_PREFIX}%`);
+  return query;
+}
+
+function applyListFilters(query, { device_id, key, duration_days, is_used }) {
+  if (device_id) query = query.ilike('device_id', `%${device_id}%`);
+  if (key) query = query.ilike('key', `%${key}%`);
+  if (duration_days) query = query.eq('duration_days', duration_days);
+  if (is_used !== undefined && is_used !== '') query = query.eq('is_used', is_used === 'true');
+  return query;
+}
+
+function resolveCreatePrefix(plugin, prefix) {
+  if (plugin === 'cjzs') return 'CJZS';
+  const resolved = String(prefix || 'XHS').trim().toUpperCase();
+  if (resolved.startsWith('CJZS')) {
+    return { error: 'FlowX 插件不能使用 CJZS 前缀' };
+  }
+  return { prefix: resolved };
+}
+
+function validateExpiresAt(expires_at) {
+  if (typeof expires_at !== 'string' || !expires_at.trim()) {
+    return { ok: false, error: 'expires_at 必须是 ISO8601 字符串' };
+  }
+  const trimmed = expires_at.trim();
+  const ts = new Date(trimmed).getTime();
+  if (Number.isNaN(ts)) {
+    return { ok: false, error: 'expires_at 无法解析为合法时间' };
+  }
+  return { ok: true, value: trimmed };
 }
 
 export default async function handler(req, res) {
@@ -189,18 +248,26 @@ export default async function handler(req, res) {
 
       // 3. 创建激活码 (支持随机生成和批量)
       if (action === "create") {
-        const { key, duration_days, count = 1, prefix = 'XHS', permissions } = body;
-        const normalizedPermissions = normalizePermissions(permissions);
+        const { key, duration_days, count = 1, prefix = 'XHS', permissions, plugin } = body;
+        const prefixResult = resolveCreatePrefix(plugin, prefix);
+        if (prefixResult.error) {
+          return res.status(400).json({ error: prefixResult.error });
+        }
+        const resolvedPrefix = prefixResult.prefix;
+        const normalizedPermissions =
+          plugin === 'cjzs'
+            ? normalizeCjzsPermissions(permissions)
+            : normalizePermissions(permissions);
         const keysToInsert = [];
 
         if (key) {
-          // 指定生成单个
+          const keyCheck = plugin === 'cjzs' ? assertCjzsKey(key) : assertNotCjzsKey(key);
+          if (!keyCheck.ok) return res.status(400).json({ error: keyCheck.error });
           keysToInsert.push({ key, duration_days, is_used: false, permissions: normalizedPermissions });
         } else {
-          // 随机批量生成
           for (let i = 0; i < count; i++) {
             keysToInsert.push({
-              key: generateRandomKey(prefix),
+              key: generateRandomKey(resolvedPrefix),
               duration_days,
               is_used: false,
               permissions: normalizedPermissions
@@ -217,10 +284,28 @@ export default async function handler(req, res) {
         return res.status(201).json(data);
       }
 
-      if (action === "update_permissions") {
-        const { id, permissions } = body;
+      if (action === "update_expires_at") {
+        const { id, expires_at } = body;
         if (!id) return res.status(400).json({ error: "缺少 id" });
-        const normalizedPermissions = normalizePermissions(permissions);
+        const validation = validateExpiresAt(expires_at);
+        if (!validation.ok) return res.status(400).json({ error: validation.error });
+        const { data, error } = await supabase
+          .from('activation_keys')
+          .update({ expires_at: validation.value })
+          .eq('id', id)
+          .select()
+          .single();
+        if (error) return res.status(500).json({ error: "更新过期时间失败", details: error.message });
+        return res.status(200).json({ message: "过期时间更新成功", data });
+      }
+
+      if (action === "update_permissions") {
+        const { id, permissions, plugin } = body;
+        if (!id) return res.status(400).json({ error: "缺少 id" });
+        const normalizedPermissions =
+          plugin === 'cjzs'
+            ? normalizeCjzsPermissions(permissions)
+            : normalizePermissions(permissions);
         if (!normalizedPermissions) {
           return res.status(400).json({ error: "permissions 必须是合法 JSON 对象" });
         }
@@ -264,45 +349,39 @@ export default async function handler(req, res) {
         const key = req.query.key;
         const duration_days = req.query.duration_days;
         const is_used = req.query.is_used;
+        const plugin = req.query.plugin || 'all';
+        const filterParams = { device_id, key, duration_days, is_used };
 
-        let query = supabase
-          .from('activation_keys')
-          .select('*', { count: 'exact' });
+        let query = supabase.from('activation_keys').select('*', { count: 'exact' });
+        query = applyPluginFilter(query, plugin);
+        query = applyListFilters(query, filterParams);
 
-        // 筛选条件
-        if (device_id) query = query.ilike('device_id', `%${device_id}%`);
-        if (key) query = query.ilike('key', `%${key}%`);
-        if (duration_days) query = query.eq('duration_days', duration_days);
-        if (is_used !== undefined && is_used !== '') query = query.eq('is_used', is_used === 'true');
-
-        // 分页和排序
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
-        
-        // 并行执行所有查询，显著减少响应时间
+
+        let usedQuery = supabase.from('activation_keys').select('*', { count: 'exact', head: true }).eq('is_used', true);
+        let unusedQuery = supabase.from('activation_keys').select('*', { count: 'exact', head: true }).eq('is_used', false);
+        usedQuery = applyPluginFilter(usedQuery, plugin);
+        unusedQuery = applyPluginFilter(unusedQuery, plugin);
+        usedQuery = applyListFilters(usedQuery, filterParams);
+        unusedQuery = applyListFilters(unusedQuery, filterParams);
+
         const [mainResult, usedResult, unusedResult] = await Promise.all([
-          query
-            .order('created_at', { ascending: false })
-            .range(from, to),
-          supabase
-            .from('activation_keys')
-            .select('*', { count: 'exact', head: true })
-            .eq('is_used', true),
-          supabase
-            .from('activation_keys')
-            .select('*', { count: 'exact', head: true })
-            .eq('is_used', false)
+          query.order('created_at', { ascending: false }).range(from, to),
+          usedQuery,
+          unusedQuery
         ]);
 
         if (mainResult.error) return res.status(500).json({ error: "获取列表失败", details: mainResult.error.message });
 
-        return res.status(200).json({ 
-          data: mainResult.data, 
-          total: mainResult.count, 
+        return res.status(200).json({
+          data: mainResult.data,
+          total: mainResult.count,
           used: usedResult.count || 0,
           unused: unusedResult.count || 0,
-          page, 
-          pageSize 
+          page,
+          pageSize,
+          plugin
         });
       }
     }
