@@ -448,6 +448,10 @@
             .toggle-sidebar-btn { display: none; }
             .main-grid.sidebar-collapsed { grid-template-columns: 1fr; }
         }
+        /* 窄屏 / 手机：隐藏手动切换，由 JS 强制卡片布局 */
+        @media (max-width: 1024px) {
+            .view-toggle { display: none !important; }
+        }
         @media (max-width: 768px) {
             .navbar { padding: 12px 15px; border-radius: 15px; margin-bottom: 25px; }
             .nav-logo { font-size: 16px; }
@@ -465,7 +469,6 @@
             .login-card h1 { font-size: 20px; }
             .filter-bar { grid-template-columns: 1fr; gap: 10px; padding: 12px; }
             .btn-primary.query-btn { order: 10; margin-top: 5px; }
-            .view-toggle { display: none !important; }
         }
         @media (max-width: 480px) {
             .duration-grid { grid-template-columns: repeat(2, 1fr); }
@@ -891,6 +894,9 @@ let selectedIds = new Set();
 let activePlugin = localStorage.getItem('admin_active_plugin') || 'flowx';
 let activeSubTab = 'list';
 let expiresEditBaseMs = Date.now();
+const NARROW_VIEWPORT_MAX = 1024;
+let desktopViewMode = localStorage.getItem('admin_view_mode') || 'table';
+let narrowViewportMq = null;
 
 function getApiUrl() {
     try {
@@ -1111,11 +1117,41 @@ function applyPluginOptionsToGenerate() {
     else applyPermissionTemplate(prefs.flowxTemplate || 'all');
 }
 
-function setViewMode(mode) {
-    if (window.innerWidth <= 768) mode = 'card';
+function isNarrowViewport() {
+    return window.matchMedia(`(max-width: ${NARROW_VIEWPORT_MAX}px)`).matches;
+}
+
+function applyViewMode(mode) {
     document.getElementById('viewTableBtn').classList.toggle('active', mode === 'table');
     document.getElementById('viewCardBtn').classList.toggle('active', mode === 'card');
-    document.querySelector('.table-container').classList.toggle('card-view-active', mode === 'card');
+    document.querySelector('.table-container')?.classList.toggle('card-view-active', mode === 'card');
+}
+
+function syncViewModeToViewport() {
+    if (isNarrowViewport()) {
+        applyViewMode('card');
+        return;
+    }
+    applyViewMode(desktopViewMode);
+}
+
+function setViewMode(mode) {
+    if (isNarrowViewport()) {
+        applyViewMode('card');
+        return;
+    }
+    desktopViewMode = mode;
+    localStorage.setItem('admin_view_mode', mode);
+    applyViewMode(mode);
+}
+
+function bindResponsiveViewMode() {
+    narrowViewportMq = window.matchMedia(`(max-width: ${NARROW_VIEWPORT_MAX}px)`);
+    const onChange = () => syncViewModeToViewport();
+    if (narrowViewportMq.addEventListener) narrowViewportMq.addEventListener('change', onChange);
+    else narrowViewportMq.addListener(onChange);
+    window.addEventListener('resize', onChange);
+    syncViewModeToViewport();
 }
 
 function handleRowClick(e, id) {
@@ -1412,7 +1448,7 @@ function copyText(text) {
 }
 
 window.onload = () => {
-    if (window.innerWidth <= 768) setViewMode('card');
+    bindResponsiveViewMode();
     bindPermissionBuilderEvents();
     loadSystemOptions();
     if (currentAuth) showAdmin();
