@@ -138,7 +138,7 @@ function applyListFilters(query, { device_id, key, duration_days, is_used }) {
 }
 
 function resolveCreatePrefix(plugin, prefix) {
-  if (plugin === 'cjzs') return 'CJZS';
+  if (plugin === 'cjzs') return { prefix: 'CJZS' };
   const resolved = String(prefix || 'XHS').trim().toUpperCase();
   if (resolved.startsWith('CJZS')) {
     return { error: 'FlowX 插件不能使用 CJZS 前缀' };
