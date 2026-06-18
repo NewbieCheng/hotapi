@@ -53,13 +53,28 @@ function KeyRowCard({
         </button>
       </div>
       <dl className="key-row-card__meta">
-        <div><dt>设备码</dt><dd className="mono">{row.device_id || '—'}</dd></div>
-        <div><dt>有效期</dt><dd>{row.duration_days} 天</dd></div>
+        <div className="key-row-card__meta-cell">
+          <dt>设备码</dt>
+          <dd className="mono">{row.device_id || '—'}</dd>
+        </div>
+        <div className="key-row-card__meta-cell">
+          <dt>有效期</dt>
+          <dd>{row.duration_days} 天</dd>
+        </div>
         {plugin === 'cjzs' ? (
-          <div><dt>等级</dt><dd>{parseCjzsPermissions(row.permissions).level.toUpperCase()}</dd></div>
+          <div className="key-row-card__meta-cell">
+            <dt>等级</dt>
+            <dd>{parseCjzsPermissions(row.permissions).level.toUpperCase()}</dd>
+          </div>
         ) : null}
-        <div><dt>权限</dt><dd>{permissionSummary(plugin, row)}</dd></div>
-        <div className="key-row-card__meta-wide"><dt>过期时间</dt><dd>{formatDate(row.expires_at)}</dd></div>
+        <div className="key-row-card__meta-cell">
+          <dt>权限</dt>
+          <dd>{permissionSummary(plugin, row)}</dd>
+        </div>
+        <div className={`key-row-card__meta-cell${plugin === 'cjzs' ? ' key-row-card__meta-cell--wide' : ''}`}>
+          <dt>过期时间</dt>
+          <dd>{formatDate(row.expires_at)}</dd>
+        </div>
       </dl>
       <KeyRowActions
         compact

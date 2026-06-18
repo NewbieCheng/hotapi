@@ -65,7 +65,7 @@
 }
 
 .key-row-card {
-  padding: 12px 14px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -73,23 +73,25 @@
 
 .key-row-card__head {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: flex-start;
 }
 
 .key-row-card__check {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding-top: 0;
-  margin: -8px 0;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  padding: 0;
 }
 
 .key-row-card__check input {
   width: 18px;
   height: 18px;
+  margin: 0;
 }
 
 .key-row-card__title {
@@ -97,29 +99,44 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.key-row-card__title-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--admin-primary) 70%, white);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .key-row-card__key {
   font-size: 13px;
   word-break: break-all;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .key-row-card__meta {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 10px;
   margin: 0;
+  padding: 10px;
+  border-radius: var(--admin-radius-sm);
+  background: var(--admin-surface-muted);
 }
 
-.key-row-card__meta > div {
+.key-row-card__meta-cell {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
-.key-row-card__meta-wide {
+.key-row-card__meta-cell--wide {
   grid-column: 1 / -1;
 }
 
@@ -133,16 +150,19 @@
 .key-row-card__meta dd {
   margin: 0;
   font-size: 13px;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .key-row-card__actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .key-row-card__actions .ui-btn {
   width: 100%;
-  padding: 8px 10px;
+  min-width: 0;
+  padding: 8px 4px;
   font-size: 12px;
 }
