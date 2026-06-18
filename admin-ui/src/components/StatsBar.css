@@ -49,6 +49,21 @@
   box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
 }
 
+.stat-card--clickable {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.stat-card--clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--admin-shadow);
+}
+
+.stat-card--active {
+  outline: 2px solid color-mix(in srgb, var(--admin-primary) 40%, transparent);
+  outline-offset: 2px;
+}
+
 .stat-card__body p {
   margin: 0 0 4px;
   color: var(--admin-muted);

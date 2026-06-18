@@ -10,38 +10,57 @@ import {
   updatePermissions
 } from '../api/activationAdmin'
 import type { ActivationKeyRow, PluginId } from '../types'
+import { EMPTY_FILTERS, filtersToSearchParams, type ListFilters } from '../types/filters'
 import { formatPluginNamesLine } from '../permissions/definitions'
+import { useMediaQuery } from '../hooks/useMediaQuery'
+import { usePreferences } from '../hooks/usePreferences'
+import { useToast } from '../hooks/useToast'
+import { useViewMode } from '../hooks/useViewMode'
 import { PluginTabs } from '../components/PluginTabs'
 import { StatsBar } from '../components/StatsBar'
-import { FilterBar, EMPTY_FILTERS } from '../components/FilterBar'
-import { KeyTable } from '../components/KeyTable'
+import { SearchCommandBar } from '../components/SearchCommandBar'
+import { KeyList } from '../components/KeyList'
+import { ViewModeToggle } from '../components/ViewModeToggle'
 import { GeneratePanel } from '../components/GeneratePanel'
+import { CreateResultDrawer } from '../components/CreateResultDrawer'
+import { KeyDetailSheet } from '../components/KeyDetailSheet'
+import { BottomNav, type NavTab } from '../components/BottomNav'
+import { PreferencesPanel } from '../components/PreferencesPanel'
 import {
   PermissionBuilder,
-  defaultPermissionState,
   permissionStateFromRow,
   permissionStateToPayload,
-  type PermissionState
+  type PermissionState,
+  defaultPermissionState
 } from '../components/PermissionBuilder'
-import { Alert, Button, Card, Chip, Modal, Select, TextField } from '../components/ui'
+import { Alert, Button, Card, Chip, Modal, Select, TextField, Toast, EmptyState } from '../components/ui'
+import { ListSkeleton, StatsSkeleton } from '../components/ui/Skeleton'
 import './DashboardPage.css'
 
 interface DashboardPageProps {
   onLogout: () => void
 }
 
-type SubTab = 'list' | 'generate' | 'options'
+function exportTxt(keys: string[], filename = 'activation-keys.txt') {
+  const content = keys.join('\n')
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
 
 export function DashboardPage({ onLogout }: DashboardPageProps) {
   const [plugin, setPlugin] = useState<PluginId>('flowx')
-  const [subTab, setSubTab] = useState<SubTab>('list')
+  const [subTab, setSubTab] = useState<NavTab>('list')
   const [rows, setRows] = useState<ActivationKeyRow[]>([])
   const [total, setTotal] = useState(0)
   const [used, setUsed] = useState(0)
   const [unused, setUnused] = useState(0)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [filters, setFilters] = useState<ListFilters>(EMPTY_FILTERS)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -50,7 +69,23 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
   const [modalType, setModalType] = useState<'permissions' | 'expires' | null>(null)
   const [editPermissionState, setEditPermissionState] = useState<PermissionState>(() => defaultPermissionState('flowx'))
   const [expiresInput, setExpiresInput] = useState('')
-  const [toast, setToast] = useState('')
+  const [activeStat, setActiveStat] = useState<'total' | 'used' | 'unused' | null>(null)
+  const [createdKeys, setCreatedKeys] = useState<ActivationKeyRow[]>([])
+  const [showCreateResult, setShowCreateResult] = useState(false)
+  const [detailRow, setDetailRow] = useState<ActivationKeyRow | null>(null)
+
+  const { message: toastMessage, tone: toastTone, showToast } = useToast()
+  const { preference, resolvedMode, setPreference } = useViewMode()
+  const {
+    pageSize,
+    setPageSize,
+    setViewModePreference,
+    loadGeneratePrefs,
+    saveGeneratePrefs,
+    clearGeneratePrefs
+  } = usePreferences()
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const isWide = useMediaQuery('(min-width: 1280px)')
 
   useEffect(() => {
     document.documentElement.dataset.theme = plugin
@@ -60,15 +95,12 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
     setLoading(true)
     setError('')
     try {
-      const params = new URLSearchParams({
+      const base = new URLSearchParams({
         page: String(nextPage),
         pageSize: String(pageSize),
         plugin
       })
-      if (filters.key) params.set('key', filters.key)
-      if (filters.device_id) params.set('device_id', filters.device_id)
-      if (filters.duration_days) params.set('duration_days', filters.duration_days)
-      if (filters.is_used) params.set('is_used', filters.is_used)
+      const params = filtersToSearchParams(filters, base)
       const result = await listKeys(params)
       setRows(result.data)
       setTotal(result.total)
@@ -89,11 +121,6 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize])
 
-  const showToast = (message: string) => {
-    setToast(message)
-    window.setTimeout(() => setToast(''), 2400)
-  }
-
   const copyText = async (text: string) => {
     await navigator.clipboard.writeText(text)
     showToast('已复制到剪贴板')
@@ -105,19 +132,40 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
     await copyText(keys.join('\n'))
   }
 
+  const exportSelected = () => {
+    const keys = rows.filter((row) => selected.has(row.id)).map((row) => row.key)
+    if (!keys.length) return showToast('请先选择激活码')
+    exportTxt(keys)
+    showToast(`已导出 ${keys.length} 条`)
+  }
+
   const handlePluginChange = (next: PluginId) => {
     setPlugin(next)
     setPage(1)
     setSubTab('list')
+    setActiveStat(null)
+  }
+
+  const handleStatFilter = (key: 'total' | 'used' | 'unused') => {
+    setActiveStat(key)
+    if (key === 'total') {
+      setFilters(EMPTY_FILTERS)
+    } else if (key === 'used') {
+      setFilters((prev) => ({ ...prev, is_used: 'true', expired_only: false }))
+    } else {
+      setFilters((prev) => ({ ...prev, is_used: 'false', expired_only: false }))
+    }
   }
 
   const openPermissionEditor = (row: ActivationKeyRow) => {
+    setDetailRow(null)
     setEditingRow(row)
     setModalType('permissions')
     setEditPermissionState(permissionStateFromRow(plugin, row.permissions))
   }
 
   const openExpiresEditor = (row: ActivationKeyRow) => {
+    setDetailRow(null)
     setEditingRow(row)
     setModalType('expires')
     setExpiresInput(row.expires_at ? row.expires_at.slice(0, 16) : '')
@@ -145,10 +193,20 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
     void fetchList(page)
   }
 
+  const renewKey = async (row: ActivationKeyRow, days: number) => {
+    const base = row.expires_at ? new Date(row.expires_at) : new Date()
+    base.setDate(base.getDate() + days)
+    await updateExpiresAt(row.id, base.toISOString())
+    showToast(`已续期 ${days} 天`)
+    setDetailRow(null)
+    void fetchList(page)
+  }
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('确认删除该激活码？')) return
     await deleteKey(id)
     showToast('已删除')
+    setDetailRow(null)
     void fetchList(page)
   }
 
@@ -166,107 +224,213 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
     showToast('系统选项已保存')
   }
 
-  return (
-    <div className="dashboard-page">
-      <Card className="dashboard-top">
-        <div>
-          <h1>激活码管理控制台</h1>
-          <p>{formatPluginNamesLine()} · 批量编排 · 权限预置</p>
+  const handleCreated = (keys: ActivationKeyRow[]) => {
+    setCreatedKeys(keys)
+    setShowCreateResult(true)
+    void fetchList(1)
+  }
+
+  const generatePrefs = loadGeneratePrefs(plugin)
+
+  const listSection = (
+    <section className="dashboard-section">
+      <div className="command-bar-sticky">
+        <div className="command-bar-sticky__row">
+          <ViewModeToggle mode={resolvedMode} onChange={(mode) => setPreference(mode)} />
         </div>
-        <div className="dashboard-top-actions">
-          <Button variant="ghost" type="button" onClick={() => void fetchList(page)} disabled={loading}>
-            刷新
-          </Button>
-          <Button variant="danger" type="button" onClick={onLogout}>退出</Button>
+        <SearchCommandBar
+          filters={filters}
+          onChange={setFilters}
+          onSearch={() => void fetchList(1)}
+          activeStat={activeStat}
+        />
+      </div>
+
+      <div className="list-toolbar">
+        <span className="list-toolbar__hint">
+          {selected.size > 0 ? `已选当前页 ${selected.size} 条` : `${rows.length} 条`}
+        </span>
+        <Button type="button" onClick={() => void copySelected()}>
+          复制 {selected.size} 个
+        </Button>
+        <Button variant="ghost" type="button" onClick={exportSelected}>
+          导出 TXT
+        </Button>
+        <Button variant="danger" type="button" onClick={() => void handleBatchDelete()}>
+          批量删除
+        </Button>
+        <div className="list-pagination">
+          <Select
+            className="list-page-size"
+            options={[5, 10, 20, 50].map((size) => ({ value: String(size), label: `${size} 条/页` }))}
+            value={String(pageSize)}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+          />
+          <Button variant="ghost" type="button" disabled={page <= 1 || loading} onClick={() => void fetchList(page - 1)}>上一页</Button>
+          <span>{page} / {totalPages}</span>
+          <Button variant="ghost" type="button" disabled={page >= totalPages || loading} onClick={() => void fetchList(page + 1)}>下一页</Button>
+        </div>
+      </div>
+
+      {error ? (
+        <Alert tone="error">
+          {error}
+          <Button variant="ghost" type="button" onClick={() => void fetchList(page)}>重试</Button>
+        </Alert>
+      ) : null}
+
+      {loading ? <ListSkeleton rows={pageSize > 10 ? 8 : pageSize} /> : null}
+      {!loading && !rows.length ? (
+        <EmptyState onAction={() => setSubTab('generate')} />
+      ) : null}
+      {!loading && rows.length ? (
+        <KeyList
+          plugin={plugin}
+          viewMode={resolvedMode}
+          rows={rows}
+          selected={selected}
+          onToggle={(id) => {
+            setSelected((prev) => {
+              const next = new Set(prev)
+              if (next.has(id)) next.delete(id)
+              else next.add(id)
+              return next
+            })
+          }}
+          onToggleAll={(checked) => {
+            setSelected(checked ? new Set(rows.map((row) => row.id)) : new Set())
+          }}
+          onCopy={(key) => void copyText(key)}
+          onEditPermissions={openPermissionEditor}
+          onEditExpires={openExpiresEditor}
+          onDelete={(id) => void handleDelete(id)}
+          onOpenDetail={setDetailRow}
+        />
+      ) : null}
+    </section>
+  )
+
+  return (
+    <div className={`dashboard-page${isMobile ? ' dashboard-page--mobile' : ''}${isWide ? ' dashboard-page--wide' : ''}`}>
+      <Card className="dashboard-top">
+        <div className="dashboard-top__band" aria-hidden />
+        <div className="dashboard-top__content">
+          <div>
+            <h1>激活码管理控制台</h1>
+            <p>{formatPluginNamesLine()} · 批量编排 · 权限预置</p>
+          </div>
+          <div className="dashboard-top-actions">
+            <Button variant="ghost" type="button" onClick={() => void fetchList(page)} disabled={loading}>
+              刷新
+            </Button>
+            {!isMobile ? (
+              <Button variant="danger" type="button" onClick={onLogout}>退出</Button>
+            ) : null}
+          </div>
         </div>
       </Card>
 
       <PluginTabs active={plugin} onChange={handlePluginChange} />
-      <StatsBar total={total} used={used} unused={unused} />
 
-      <div className="sub-tabs" role="tablist" aria-label="控制台分区">
-        {([
-          ['list', '密钥列表'],
-          ['generate', '快捷生成'],
-          ['options', '系统选项']
-        ] as const).map(([id, label]) => (
-          <Chip key={id} active={subTab === id} onClick={() => setSubTab(id)}>
-            {label}
-          </Chip>
-        ))}
+      {loading && !rows.length ? <StatsSkeleton /> : (
+        <StatsBar
+          total={total}
+          used={used}
+          unused={unused}
+          activeKey={activeStat}
+          onFilter={handleStatFilter}
+        />
+      )}
+
+      {!isMobile ? (
+        <div className="sub-tabs" role="tablist" aria-label="控制台分区">
+          {([
+            ['list', '密钥列表'],
+            ...(!isWide ? [['generate', '快捷生成']] as const : []),
+            ['options', '系统选项']
+          ] as const).map(([id, label]) => (
+            <Chip key={id} active={subTab === id} onClick={() => setSubTab(id as NavTab)}>
+              {label}
+            </Chip>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="dashboard-body">
+        <main className="dashboard-main">
+          {(subTab === 'list' || (isWide && subTab !== 'options')) ? listSection : null}
+
+          {subTab === 'generate' && !isWide ? (
+            <GeneratePanel
+              plugin={plugin}
+              collapsedPermissions={isMobile}
+              savedPrefs={generatePrefs}
+              onSavePrefs={(prefs) => saveGeneratePrefs(plugin, prefs)}
+              onCreated={handleCreated}
+              onCreate={createKeys}
+            />
+          ) : null}
+
+          {subTab === 'options' ? (
+            <PreferencesPanel
+              apiBase={apiBase}
+              onApiBaseChange={setApiBaseState}
+              onSaveApiBase={saveOptions}
+              viewModePreference={preference}
+              onViewModePreferenceChange={(pref) => {
+                setPreference(pref)
+                setViewModePreference(pref)
+              }}
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
+              activePlugin={plugin}
+              onClearGeneratePrefs={(p) => {
+                clearGeneratePrefs(p)
+                showToast('已重置生成偏好')
+              }}
+              onLogout={onLogout}
+            />
+          ) : null}
+        </main>
+
+        {isWide ? (
+          <aside className="dashboard-sidebar">
+            <GeneratePanel
+              plugin={plugin}
+              savedPrefs={generatePrefs}
+              onSavePrefs={(prefs) => saveGeneratePrefs(plugin, prefs)}
+              onCreated={handleCreated}
+              onCreate={createKeys}
+            />
+          </aside>
+        ) : null}
       </div>
 
-      {subTab === 'list' ? (
-        <section className="dashboard-section">
-          <FilterBar filters={filters} onChange={setFilters} onSearch={() => void fetchList(1)} />
-          <div className="list-toolbar">
-            <Button type="button" onClick={() => void copySelected()}>
-              复制 {selected.size} 个激活码
-            </Button>
-            <Button variant="danger" type="button" onClick={() => void handleBatchDelete()}>
-              批量删除
-            </Button>
-            <div className="list-pagination">
-              <Select
-                className="list-page-size"
-                options={[5, 10, 20, 50].map((size) => ({ value: String(size), label: `${size} 条/页` }))}
-                value={String(pageSize)}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-              />
-              <Button variant="ghost" type="button" disabled={page <= 1} onClick={() => void fetchList(page - 1)}>上一页</Button>
-              <span>{page} / {totalPages}</span>
-              <Button variant="ghost" type="button" disabled={page >= totalPages} onClick={() => void fetchList(page + 1)}>下一页</Button>
-            </div>
-          </div>
-          {error ? <Alert tone="error">{error}</Alert> : null}
-          <KeyTable
-            plugin={plugin}
-            rows={rows}
-            selected={selected}
-            onToggle={(id) => {
-              setSelected((prev) => {
-                const next = new Set(prev)
-                if (next.has(id)) next.delete(id)
-                else next.add(id)
-                return next
-              })
-            }}
-            onToggleAll={(checked) => {
-              setSelected(checked ? new Set(rows.map((row) => row.id)) : new Set())
-            }}
-            onCopy={(key) => void copyText(key)}
-            onEditPermissions={openPermissionEditor}
-            onEditExpires={openExpiresEditor}
-            onDelete={(id) => void handleDelete(id)}
-          />
-        </section>
-      ) : null}
+      {isMobile ? <BottomNav active={subTab} onChange={setSubTab} /> : null}
 
-      {subTab === 'generate' ? (
-        <GeneratePanel
-          plugin={plugin}
-          onCreated={() => {
-            setSubTab('list')
-            void fetchList(1)
-          }}
-          onCreate={async (payload) => {
-            await createKeys(payload)
-          }}
-        />
-      ) : null}
+      <CreateResultDrawer
+        open={showCreateResult}
+        keys={createdKeys}
+        onClose={() => setShowCreateResult(false)}
+        onCopyAll={() => void copyText(createdKeys.map((k) => k.key).join('\n'))}
+        onCopySelected={(keys) => void copyText(keys.join('\n'))}
+        onGoToList={() => {
+          setShowCreateResult(false)
+          setSubTab('list')
+        }}
+        onContinue={() => setShowCreateResult(false)}
+      />
 
-      {subTab === 'options' ? (
-        <Card className="options-panel">
-          <h2>系统选项</h2>
-          <TextField
-            label="API 基址"
-            value={apiBase}
-            onChange={(e) => setApiBaseState(e.target.value)}
-            mono
-          />
-          <Button type="button" onClick={saveOptions}>保存</Button>
-        </Card>
-      ) : null}
+      <KeyDetailSheet
+        open={Boolean(detailRow)}
+        plugin={plugin}
+        row={detailRow}
+        onClose={() => setDetailRow(null)}
+        onCopy={(key) => void copyText(key)}
+        onEditPermissions={openPermissionEditor}
+        onRenew={(row, days) => void renewKey(row, days)}
+        onDelete={(id) => void handleDelete(id)}
+      />
 
       <Modal
         open={Boolean(editingRow && modalType === 'expires')}
@@ -303,7 +467,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         <PermissionBuilder plugin={plugin} state={editPermissionState} onChange={setEditPermissionState} />
       </Modal>
 
-      {toast ? <div className="toast" role="status">{toast}</div> : null}
+      <Toast message={toastMessage} tone={toastTone} />
     </div>
   )
 }

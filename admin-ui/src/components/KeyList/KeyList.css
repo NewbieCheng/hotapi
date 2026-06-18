@@ -1,4 +1,4 @@
-.key-table-wrap--desktop {
+.key-table-wrap {
   overflow: auto;
   padding: 0;
 }
@@ -35,13 +35,6 @@
   font-size: 12px;
 }
 
-.empty-row {
-  text-align: center;
-  color: var(--admin-muted);
-  padding: 32px !important;
-}
-
-/* 移动端：卡片列表（默认） */
 .key-card-list {
   display: flex;
   flex-direction: column;
@@ -134,24 +127,4 @@
   width: 100%;
   padding: 8px 10px;
   font-size: 12px;
-}
-
-.key-card-empty {
-  padding: 28px;
-  text-align: center;
-  color: var(--admin-muted);
-  font-size: 14px;
-}
-
-/* 桌面端：表格；移动端：卡片 */
-@media (min-width: 769px) {
-  .key-card-list {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .key-table-wrap--desktop {
-    display: none;
-  }
 }

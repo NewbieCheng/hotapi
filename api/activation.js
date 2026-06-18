@@ -153,12 +153,35 @@ function applyPluginFilter(query, plugin) {
   return query;
 }
 
-function applyListFilters(query, { device_id, key, duration_days, is_used }) {
-  if (device_id) query = query.ilike('device_id', `%${device_id}%`);
-  if (key) query = query.ilike('key', `%${key}%`);
+function applyListFilters(query, { device_id, key, duration_days, is_used, q, expires_within_days, expired_only }) {
+  if (q) {
+    const term = String(q).trim();
+    if (term) query = query.or(`key.ilike.%${term}%,device_id.ilike.%${term}%`);
+  } else {
+    if (device_id) query = query.ilike('device_id', `%${device_id}%`);
+    if (key) query = query.ilike('key', `%${key}%`);
+  }
   if (duration_days) query = query.eq('duration_days', duration_days);
   if (is_used !== undefined && is_used !== '') query = query.eq('is_used', is_used === 'true');
+  if (expires_within_days) {
+    const days = parseInt(expires_within_days, 10);
+    if (days > 0) {
+      const now = new Date().toISOString();
+      const future = new Date(Date.now() + days * 86400000).toISOString();
+      query = query.eq('is_used', true).gte('expires_at', now).lte('expires_at', future);
+    }
+  }
+  if (expired_only === 'true' || expired_only === true) {
+    query = query.eq('is_used', true).lt('expires_at', new Date().toISOString());
+  }
   return query;
+}
+
+function applyListSort(query, sort_by, sort_order) {
+  const allowed = ['created_at', 'expires_at', 'used_at', 'duration_days'];
+  const column = allowed.includes(sort_by) ? sort_by : 'created_at';
+  const ascending = sort_order === 'asc';
+  return query.order(column, { ascending, nullsFirst: false });
 }
 
 function resolveCreatePrefix(plugin, prefix) {
@@ -479,14 +502,20 @@ export default async function handler(req, res) {
         const pageSize = parseInt(req.query.pageSize) || 5;
         const device_id = req.query.device_id;
         const key = req.query.key;
+        const q = req.query.q;
         const duration_days = req.query.duration_days;
         const is_used = req.query.is_used;
+        const sort_by = req.query.sort_by;
+        const sort_order = req.query.sort_order;
+        const expires_within_days = req.query.expires_within_days;
+        const expired_only = req.query.expired_only;
         const plugin = req.query.plugin || 'all';
-        const filterParams = { device_id, key, duration_days, is_used };
+        const filterParams = { device_id, key, duration_days, is_used, q, expires_within_days, expired_only };
 
         let query = supabase.from('activation_keys').select('*', { count: 'exact' });
         query = applyPluginFilter(query, plugin);
         query = applyListFilters(query, filterParams);
+        query = applyListSort(query, sort_by, sort_order);
 
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
@@ -499,7 +528,7 @@ export default async function handler(req, res) {
         unusedQuery = applyListFilters(unusedQuery, filterParams);
 
         const [mainResult, usedResult, unusedResult] = await Promise.all([
-          query.order('created_at', { ascending: false }).range(from, to),
+          query.range(from, to),
           usedQuery,
           unusedQuery
         ]);

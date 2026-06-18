@@ -1,0 +1,132 @@
+.key-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(21, 24, 32, 0.35);
+  z-index: 65;
+}
+
+.key-detail-sheet-mobile {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 66;
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: var(--admin-shadow-lg);
+}
+
+.key-detail-sheet-mobile__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--admin-border);
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+
+.key-detail-sheet-mobile__head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.key-detail-sheet-mobile__head button {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--admin-muted);
+}
+
+.key-detail-sheet {
+  padding: 16px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.key-detail-sheet__key-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.key-detail-sheet__label {
+  font-size: 12px;
+  color: var(--admin-muted);
+  font-weight: 500;
+}
+
+.key-detail-sheet__key {
+  font-size: 15px;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.key-detail-sheet__meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+}
+
+.key-detail-sheet__meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.key-detail-sheet__meta dt {
+  margin: 0;
+  font-size: 11px;
+  color: var(--admin-muted);
+}
+
+.key-detail-sheet__meta dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+.key-detail-sheet__renew-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.key-detail-sheet__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.key-detail-sheet__actions .ui-btn {
+  flex: 1;
+}
+
+.key-table__key-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--admin-primary);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.key-table__key-btn:hover {
+  text-decoration: underline;
+}
+
+.key-row-card__title-btn {
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}

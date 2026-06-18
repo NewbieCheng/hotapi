@@ -269,6 +269,11 @@ Header: x-admin-auth: ***
 | `plugin=zhixiao` | 仅 `ZHIXIAO-%` |
 | `plugin=all` 或省略 | 全量 |
 | `key`, `device_id`, `is_used`, `duration_days` | 筛选 |
+| `q` | 合并搜索激活码或设备码（`ilike` OR） |
+| `sort_by` | `created_at` \| `expires_at` \| `used_at` \| `duration_days`（默认 `created_at`） |
+| `sort_order` | `asc` \| `desc`（默认 `desc`） |
+| `expires_within_days` | 未来 N 天内过期且已激活 |
+| `expired_only=true` | 已激活且 `expires_at < now` |
 
 ### 创建激活码
 

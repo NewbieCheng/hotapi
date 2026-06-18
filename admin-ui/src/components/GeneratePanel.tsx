@@ -1,6 +1,12 @@
-import { useState } from 'react'
-import type { GenerateMode, PluginId } from '../types'
-import { PLUGINS } from '../permissions/definitions'
+import { useEffect, useMemo, useState } from 'react'
+import type { ActivationKeyRow, GenerateMode, PluginId } from '../types'
+import type { GeneratePrefs } from '../hooks/usePreferences'
+import {
+  CJZS_PLATFORMS,
+  FLOWX_PERMISSIONS,
+  PLUGINS,
+  desktopPermissionDefs
+} from '../permissions/definitions'
 import {
   PermissionBuilder,
   defaultPermissionState,
@@ -18,32 +24,88 @@ const DURATIONS = [
   { label: '永久', days: 9999 }
 ]
 
-interface GeneratePanelProps {
-  plugin: PluginId
-  onCreated: () => void
-  onCreate: (payload: Record<string, unknown>) => Promise<void>
+const PHONE_RE = /^1[3-9]\d{9}$/
+
+function permissionSummaryText(plugin: PluginId, state: PermissionState): string {
+  if (state.kind === 'cjzs') {
+    return `已开 ${state.channels.length}/${CJZS_PLATFORMS.length} 平台 · 等级 ${state.level}`
+  }
+  if (state.kind === 'desktop') {
+    const defs = desktopPermissionDefs(plugin)
+    const enabled = defs.filter((d) => state.values[d.key]).length
+    return `已开 ${enabled}/${defs.length} 项 · 等级 ${state.level}`
+  }
+  const enabled = FLOWX_PERMISSIONS.filter((p) => state.values[p.key]).length
+  return `已开 ${enabled}/${FLOWX_PERMISSIONS.length} 项`
 }
 
-export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProps) {
-  const [mode, setMode] = useState<GenerateMode>('random')
-  const [duration, setDuration] = useState(30)
+interface GeneratePanelProps {
+  plugin: PluginId
+  collapsedPermissions?: boolean
+  onCreated: (keys: ActivationKeyRow[]) => void
+  onCreate: (payload: Record<string, unknown>) => Promise<ActivationKeyRow[]>
+  savedPrefs?: GeneratePrefs | null
+  onSavePrefs?: (prefs: GeneratePrefs) => void
+}
+
+export function GeneratePanel({
+  plugin,
+  collapsedPermissions = false,
+  onCreated,
+  onCreate,
+  savedPrefs,
+  onSavePrefs
+}: GeneratePanelProps) {
+  const [mode, setMode] = useState<GenerateMode>(savedPrefs?.mode ?? 'random')
+  const [duration, setDuration] = useState(savedPrefs?.duration ?? 30)
   const [customDuration, setCustomDuration] = useState('')
   const [count, setCount] = useState(1)
   const [customKey, setCustomKey] = useState('')
   const [phone, setPhone] = useState('')
   const [phones, setPhones] = useState('')
   const [permissionState, setPermissionState] = useState<PermissionState>(() => defaultPermissionState(plugin))
+  const [permissionsOpen, setPermissionsOpen] = useState(!collapsedPermissions)
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState('')
   const [messageTone, setMessageTone] = useState<'success' | 'error'>('success')
 
+  useEffect(() => {
+    setPermissionState(defaultPermissionState(plugin))
+    if (savedPrefs) {
+      setMode(savedPrefs.mode)
+      setDuration(savedPrefs.duration)
+    } else {
+      setMode('random')
+      setDuration(30)
+    }
+    setCustomDuration('')
+    setCustomKey('')
+    setPhone('')
+    setPhones('')
+    setPermissionsOpen(!collapsedPermissions)
+  }, [plugin, savedPrefs, collapsedPermissions])
+
   const resolvedDuration = customDuration ? Number(customDuration) : duration
   const prefix = PLUGINS[plugin].prefix
+  const permSummary = useMemo(() => permissionSummaryText(plugin, permissionState), [plugin, permissionState])
+
+  const phoneError = phone.trim() && !PHONE_RE.test(phone.trim()) ? '请输入 11 位大陆手机号' : ''
+  const customKeyWarning = customKey.trim() && !customKey.trim().toUpperCase().startsWith(prefix)
+    ? `建议使用 ${prefix} 前缀`
+    : ''
+
+  const persistPrefs = () => {
+    onSavePrefs?.({ mode, duration: resolvedDuration })
+  }
 
   const submit = async (overrideCount?: number) => {
     setPending(true)
     setMessage('')
     try {
+      if (mode === 'phone' && phone.trim() && !PHONE_RE.test(phone.trim())) {
+        throw new Error('请输入有效的 11 位大陆手机号')
+      }
+
       const payload: Record<string, unknown> = {
         plugin,
         duration_days: resolvedDuration,
@@ -60,15 +122,20 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
           .split(/\r?\n/)
           .map((line) => line.trim())
           .filter(Boolean)
-        if (batch.length) payload.phones = batch
-        else if (phone.trim()) payload.phone = phone.trim()
-        else throw new Error('请输入手机号或批量列表')
+        if (batch.length) {
+          const invalid = batch.find((p) => !PHONE_RE.test(p))
+          if (invalid) throw new Error(`无效手机号: ${invalid}`)
+          payload.phones = batch
+        } else if (phone.trim()) {
+          payload.phone = phone.trim()
+        } else throw new Error('请输入手机号或批量列表')
       }
 
-      await onCreate(payload)
+      persistPrefs()
+      const created = await onCreate(payload)
       setMessageTone('success')
       setMessage(overrideCount ? `已生成 ${overrideCount} 个激活码` : '生成成功')
-      onCreated()
+      onCreated(created)
     } catch (e) {
       setMessageTone('error')
       setMessage(e instanceof Error ? e.message : '生成失败')
@@ -88,6 +155,8 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
           重置权限
         </Button>
       </div>
+
+      <div className="generate-perm-summary">{permSummary}</div>
 
       <Card className="generate-section">
         <h3 className="generate-section__title">会员周期</h3>
@@ -144,13 +213,16 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
         ) : null}
 
         {mode === 'custom' ? (
-          <TextField
-            label="完整激活码"
-            mono
-            value={customKey}
-            onChange={(e) => setCustomKey(e.target.value.toUpperCase())}
-            placeholder={`${prefix}-VIP-ZHANGSAN`}
-          />
+          <>
+            <TextField
+              label="完整激活码"
+              mono
+              value={customKey}
+              onChange={(e) => setCustomKey(e.target.value.toUpperCase())}
+              placeholder={`${prefix}-VIP-ZHANGSAN`}
+            />
+            {customKeyWarning ? <p className="generate-inline-hint">{customKeyWarning}</p> : null}
+          </>
         ) : null}
 
         {mode === 'phone' ? (
@@ -160,6 +232,7 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="13800138000"
+              error={phoneError}
             />
             <TextArea
               label="批量手机号（一行一个）"
@@ -172,8 +245,18 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
       </Card>
 
       <Card className="generate-section">
-        <h3 className="generate-section__title">权限配置</h3>
-        <PermissionBuilder plugin={plugin} state={permissionState} onChange={setPermissionState} />
+        <button
+          type="button"
+          className="generate-section__toggle"
+          onClick={() => setPermissionsOpen((v) => !v)}
+          aria-expanded={permissionsOpen}
+        >
+          <h3 className="generate-section__title">权限配置</h3>
+          <span>{permissionsOpen ? '收起' : '展开'}</span>
+        </button>
+        {permissionsOpen ? (
+          <PermissionBuilder plugin={plugin} state={permissionState} onChange={setPermissionState} />
+        ) : null}
       </Card>
 
       {message ? <Alert tone={messageTone === 'error' ? 'error' : 'success'}>{message}</Alert> : null}

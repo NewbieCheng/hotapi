@@ -1,0 +1,44 @@
+.preferences-panel {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 520px;
+}
+
+.preferences-panel h2 {
+  margin: 0;
+  font-family: var(--admin-display);
+}
+
+.preferences-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.preferences-section h3 {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--admin-muted);
+  font-weight: 600;
+}
+
+.preferences-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--admin-muted);
+  line-height: 1.5;
+}
+
+.preferences-section--danger {
+  padding-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .preferences-panel {
+    max-width: none;
+  }
+}

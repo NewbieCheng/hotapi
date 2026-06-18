@@ -1,0 +1,43 @@
+.ui-skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #eef0f3 25%, #f8f9fa 50%, #eef0f3 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.stats-skeleton {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stats-skeleton__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  background: var(--admin-panel);
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+}
+
+.list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-skeleton__row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--admin-panel);
+  border-radius: var(--admin-radius-sm);
+  border: 1px solid var(--admin-border);
+}
