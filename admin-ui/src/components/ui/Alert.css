@@ -9,21 +9,21 @@
 }
 
 .ui-alert--error {
-  background: rgba(224, 82, 82, 0.12);
-  color: #fecaca;
-  border: 1px solid rgba(224, 82, 82, 0.28);
+  background: rgba(220, 38, 38, 0.08);
+  color: #991b1b;
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .ui-alert--success {
-  background: rgba(47, 143, 107, 0.14);
-  color: #bbf7d0;
-  border: 1px solid rgba(47, 143, 107, 0.28);
+  background: rgba(5, 150, 105, 0.08);
+  color: #047857;
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
 
 .ui-alert--info {
-  background: rgba(124, 111, 232, 0.12);
-  color: #ddd6fe;
-  border: 1px solid rgba(124, 111, 232, 0.28);
+  background: rgba(91, 79, 212, 0.08);
+  color: #4338ca;
+  border: 1px solid rgba(91, 79, 212, 0.2);
 }
 
 .ui-alert__close {

@@ -30,19 +30,19 @@
 .ui-btn--primary {
   background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-2));
   color: #fff;
-  box-shadow: 0 8px 24px var(--admin-primary-glow);
+  box-shadow: 0 4px 16px var(--admin-primary-glow);
 }
 
 .ui-btn--ghost {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--admin-surface-muted);
   color: var(--admin-text);
   border: 1px solid var(--admin-border);
 }
 
 .ui-btn--danger {
-  background: rgba(224, 82, 82, 0.12);
-  color: #fecaca;
-  border: 1px solid rgba(224, 82, 82, 0.35);
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .ui-btn__spinner {

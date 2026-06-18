@@ -23,7 +23,7 @@
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.03);
+  background: #fff;
   font-size: 12px;
   cursor: pointer;
 }
@@ -42,7 +42,7 @@
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: #fff;
   font-size: 13px;
 }
 
@@ -50,4 +50,18 @@
   margin: 4px 0 0;
   color: var(--admin-muted);
   font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .permission-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .permission-templates {
+    flex-direction: column;
+  }
+
+  .permission-templates .ui-btn {
+    width: 100%;
+  }
 }

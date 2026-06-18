@@ -19,35 +19,25 @@
   margin: 0 0 4px;
   font-size: 28px;
   font-family: var(--admin-display);
+  color: var(--admin-ink);
 }
 
 .dashboard-top p {
   margin: 0;
   color: var(--admin-muted);
+  font-size: 14px;
 }
 
 .dashboard-top-actions {
   display: flex;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .sub-tabs {
   display: flex;
   gap: 8px;
-}
-
-.sub-tab {
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--admin-text);
-  cursor: pointer;
-}
-
-.sub-tab.active {
-  border-color: color-mix(in srgb, var(--admin-primary) 70%, white);
-  background: color-mix(in srgb, var(--admin-primary) 16%, transparent);
+  flex-wrap: wrap;
 }
 
 .dashboard-section {
@@ -68,18 +58,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .list-pagination .list-page-size {
   width: auto;
   min-width: 108px;
-}
-
-.dashboard-error {
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(239, 68, 68, 0.12);
-  color: #fecaca;
 }
 
 .options-panel {
@@ -101,21 +85,76 @@
   bottom: 20px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: rgba(16, 185, 129, 0.92);
-  color: #052e1d;
+  background: #fff;
+  color: #047857;
+  border: 1px solid rgba(5, 150, 105, 0.25);
+  box-shadow: var(--admin-shadow-lg);
   font-weight: 600;
   z-index: 60;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
+  .dashboard-page {
+    padding: 12px 12px 32px;
+    gap: 12px;
+  }
+
   .dashboard-top {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .dashboard-top h1 {
+    font-size: 22px;
+  }
+
+  .dashboard-top-actions {
+    width: 100%;
+  }
+
+  .dashboard-top-actions .ui-btn {
+    flex: 1;
+  }
+
+  .sub-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--admin-bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    padding: 6px 0 8px;
+    margin: 0 -4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .sub-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sub-tabs .ui-chip {
+    flex-shrink: 0;
+  }
+
+  .list-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .list-toolbar > .ui-btn {
+    width: 100%;
   }
 
   .list-pagination {
     margin-left: 0;
     width: 100%;
-    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .options-panel {
+    max-width: none;
   }
 }

@@ -12,8 +12,14 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .filter-bar {
     grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .filter-bar .ui-btn {
+    width: 100%;
   }
 }

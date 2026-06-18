@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(340px, 1.15fr) minmax(360px, 0.85fr);
+  background: #fff;
 }
 
 .login-hero {
@@ -9,14 +10,27 @@
   align-items: center;
   padding: clamp(32px, 5vw, 72px);
   background:
-    radial-gradient(circle at 18% 22%, rgba(124, 111, 232, 0.14), transparent 48%),
-    radial-gradient(circle at 82% 78%, rgba(47, 143, 107, 0.1), transparent 45%),
-    linear-gradient(165deg, #10141c 0%, #0b0d12 55%, #090a0f 100%);
+    radial-gradient(ellipse 90% 70% at 20% 20%, rgba(124, 111, 232, 0.12), transparent 50%),
+    radial-gradient(ellipse 70% 50% at 90% 80%, rgba(21, 24, 32, 0.08), transparent 45%),
+    linear-gradient(165deg, #f8f9fb 0%, #ffffff 40%, #f4f5f7 100%);
   border-right: 1px solid var(--admin-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-hero::before {
+  content: '';
+  position: absolute;
+  inset: auto -20% -30% 30%;
+  height: 55%;
+  background: radial-gradient(ellipse, rgba(21, 24, 32, 0.06), transparent 70%);
+  pointer-events: none;
 }
 
 .login-hero-inner {
   max-width: 560px;
+  position: relative;
+  z-index: 1;
 }
 
 .login-kicker {
@@ -33,11 +47,12 @@
   font-size: clamp(34px, 4.2vw, 52px);
   line-height: 1.06;
   font-weight: 600;
+  color: var(--admin-ink);
 }
 
 .login-subline {
   margin: 0 0 24px;
-  color: color-mix(in srgb, var(--admin-paper) 72%, var(--admin-muted));
+  color: var(--admin-muted);
   font-size: 15px;
   line-height: 1.7;
 }
@@ -53,17 +68,20 @@
   align-items: center;
   justify-content: center;
   padding: clamp(24px, 4vw, 48px);
+  background: #fff;
 }
 
 .login-form {
   width: min(420px, 100%);
   padding: 34px 30px;
+  box-shadow: var(--admin-shadow-lg);
 }
 
 .login-form-head h2 {
   margin: 0 0 6px;
   font-family: var(--admin-display);
   font-size: 26px;
+  color: var(--admin-ink);
 }
 
 .login-form-head p {
@@ -86,11 +104,15 @@
   .login-hero {
     border-right: none;
     border-bottom: 1px solid var(--admin-border);
-    padding-bottom: 28px;
+    padding: 28px 20px 20px;
   }
 
   .login-form-section {
-    padding-top: 8px;
-    padding-bottom: 40px;
+    padding: 16px 16px 32px;
+  }
+
+  .login-form {
+    box-shadow: var(--admin-shadow);
+    padding: 24px 20px;
   }
 }

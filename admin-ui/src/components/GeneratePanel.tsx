@@ -89,83 +89,92 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
         </Button>
       </div>
 
-      <div className="duration-grid">
-        {DURATIONS.map((item) => (
-          <Chip
-            key={item.days}
-            active={duration === item.days && !customDuration}
-            onClick={() => {
-              setDuration(item.days)
-              setCustomDuration('')
-            }}
-          >
-            {item.label}
-          </Chip>
-        ))}
-        <TextField
-          className="duration-custom"
-          placeholder="自定义天数"
-          value={customDuration}
-          onChange={(e) => setCustomDuration(e.target.value)}
-        />
-      </div>
-
-      <div className="mode-tabs">
-        {([
-          ['random', '随机批量'],
-          ['custom', '自定义激活码'],
-          ['phone', '前缀 + 手机号']
-        ] as const).map(([value, label]) => (
-          <Chip key={value} active={mode === value} onClick={() => setMode(value)}>
-            {label}
-          </Chip>
-        ))}
-      </div>
-
-      {mode === 'random' ? (
-        <div className="generate-fields">
+      <Card className="generate-section">
+        <h3 className="generate-section__title">会员周期</h3>
+        <div className="duration-grid">
+          {DURATIONS.map((item) => (
+            <Chip
+              key={item.days}
+              active={duration === item.days && !customDuration}
+              onClick={() => {
+                setDuration(item.days)
+                setCustomDuration('')
+              }}
+            >
+              {item.label}
+            </Chip>
+          ))}
           <TextField
-            label="批量数量"
-            type="number"
-            min={1}
-            max={100}
-            value={String(count)}
-            onChange={(e) => setCount(Number(e.target.value))}
-          />
-          <Button variant="ghost" type="button" disabled={pending} onClick={() => void submit(20)}>
-            一键生成 20 个
-          </Button>
-        </div>
-      ) : null}
-
-      {mode === 'custom' ? (
-        <TextField
-          label="完整激活码"
-          mono
-          value={customKey}
-          onChange={(e) => setCustomKey(e.target.value.toUpperCase())}
-          placeholder={`${prefix}-VIP-ZHANGSAN`}
-        />
-      ) : null}
-
-      {mode === 'phone' ? (
-        <div className="generate-fields generate-fields--stack">
-          <TextField
-            label="手机号"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="13800138000"
-          />
-          <TextArea
-            label="批量手机号（一行一个）"
-            rows={4}
-            value={phones}
-            onChange={(e) => setPhones(e.target.value)}
+            className="duration-custom"
+            placeholder="自定义天数"
+            value={customDuration}
+            onChange={(e) => setCustomDuration(e.target.value)}
           />
         </div>
-      ) : null}
+      </Card>
 
-      <PermissionBuilder plugin={plugin} state={permissionState} onChange={setPermissionState} />
+      <Card className="generate-section">
+        <h3 className="generate-section__title">生成方式</h3>
+        <div className="mode-tabs">
+          {([
+            ['random', '随机批量'],
+            ['custom', '自定义激活码'],
+            ['phone', '前缀 + 手机号']
+          ] as const).map(([value, label]) => (
+            <Chip key={value} active={mode === value} onClick={() => setMode(value)}>
+              {label}
+            </Chip>
+          ))}
+        </div>
+
+        {mode === 'random' ? (
+          <div className="generate-fields">
+            <TextField
+              label="批量数量"
+              type="number"
+              min={1}
+              max={100}
+              value={String(count)}
+              onChange={(e) => setCount(Number(e.target.value))}
+            />
+            <Button variant="ghost" type="button" disabled={pending} onClick={() => void submit(20)}>
+              一键生成 20 个
+            </Button>
+          </div>
+        ) : null}
+
+        {mode === 'custom' ? (
+          <TextField
+            label="完整激活码"
+            mono
+            value={customKey}
+            onChange={(e) => setCustomKey(e.target.value.toUpperCase())}
+            placeholder={`${prefix}-VIP-ZHANGSAN`}
+          />
+        ) : null}
+
+        {mode === 'phone' ? (
+          <div className="generate-fields generate-fields--stack">
+            <TextField
+              label="手机号"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="13800138000"
+            />
+            <TextArea
+              label="批量手机号（一行一个）"
+              rows={4}
+              value={phones}
+              onChange={(e) => setPhones(e.target.value)}
+            />
+          </div>
+        ) : null}
+      </Card>
+
+      <Card className="generate-section">
+        <h3 className="generate-section__title">权限配置</h3>
+        <PermissionBuilder plugin={plugin} state={permissionState} onChange={setPermissionState} />
+      </Card>
 
       {message ? <Alert tone={messageTone === 'error' ? 'error' : 'success'}>{message}</Alert> : null}
 

@@ -15,13 +15,13 @@
   padding: 12px 14px;
   border-radius: var(--admin-radius-sm);
   border: 1px solid var(--admin-border);
-  background: rgba(8, 10, 16, 0.72);
+  background: #fff;
   color: var(--admin-text);
   outline: none;
   cursor: pointer;
 }
 
 .ui-select:focus-visible {
-  border-color: color-mix(in srgb, var(--admin-primary) 65%, white);
+  border-color: color-mix(in srgb, var(--admin-primary) 55%, white);
   box-shadow: 0 0 0 3px var(--admin-primary-glow);
 }

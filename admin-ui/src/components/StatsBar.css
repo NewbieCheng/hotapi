@@ -1,27 +1,107 @@
 .stats-bar {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
 .stat-card {
-  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-left: 4px solid transparent;
 }
 
-.stat-card p {
-  margin: 0 0 8px;
+.stat-card--total {
+  border-left-color: var(--admin-stat-total);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--admin-stat-total) 6%, #fff), #fff);
+}
+
+.stat-card--used {
+  border-left-color: var(--admin-stat-used);
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), #fff);
+}
+
+.stat-card--unused {
+  border-left-color: var(--admin-stat-unused);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.06), #fff);
+}
+
+.stat-card__icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stat-card--total .stat-card__icon {
+  background: var(--admin-stat-total);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--admin-stat-total) 18%, transparent);
+}
+
+.stat-card--used .stat-card__icon {
+  background: var(--admin-stat-used);
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15);
+}
+
+.stat-card--unused .stat-card__icon {
+  background: var(--admin-stat-unused);
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
+}
+
+.stat-card__body p {
+  margin: 0 0 4px;
   color: var(--admin-muted);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
-.stat-card strong {
-  font-size: 32px;
+.stat-card__body strong {
+  font-size: 28px;
   line-height: 1;
   font-family: var(--admin-display);
+  color: var(--admin-text);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .stats-bar {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 10px;
+    border-left: none;
+    border-top: 3px solid transparent;
+  }
+
+  .stat-card--total { border-top-color: var(--admin-stat-total); }
+  .stat-card--used { border-top-color: var(--admin-stat-used); }
+  .stat-card--unused { border-top-color: var(--admin-stat-unused); }
+
+  .stat-card__icon {
+    display: none;
+  }
+
+  .stat-card__body p {
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .stat-card__body strong {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 400px) {
+  .stat-card__body p {
+    font-size: 10px;
+  }
+
+  .stat-card__body strong {
+    font-size: 20px;
   }
 }

@@ -2,7 +2,7 @@
   padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .generate-header {
@@ -15,6 +15,7 @@
 .generate-header h2 {
   margin: 0 0 4px;
   font-family: var(--admin-display);
+  color: var(--admin-ink);
 }
 
 .generate-header p {
@@ -23,47 +24,38 @@
   font-size: 13px;
 }
 
+.generate-section {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--admin-surface-muted);
+  border-color: var(--admin-border);
+}
+
+.generate-section__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .duration-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
-.duration-chip {
-  padding: 10px 8px;
-  border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--admin-text);
-  cursor: pointer;
-}
-
-.duration-chip.active {
-  border-color: color-mix(in srgb, var(--admin-primary) 70%, white);
-  background: color-mix(in srgb, var(--admin-primary) 18%, transparent);
-}
-
 .duration-custom {
-  min-width: 0;
+  grid-column: 1 / -1;
 }
 
 .mode-tabs {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-.mode-tab {
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--admin-text);
-  cursor: pointer;
-}
-
-.mode-tab.active {
-  border-color: color-mix(in srgb, var(--admin-primary) 70%, white);
 }
 
 .generate-fields {
@@ -73,37 +65,56 @@
   align-items: end;
 }
 
-.generate-fields label,
-.generate-panel > label {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--admin-muted);
-}
-
-.generate-message {
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #bbf7d0;
-  font-size: 13px;
-}
-
-.generate-submit {
-  align-self: flex-start;
-}
-
 .generate-fields--stack {
   grid-template-columns: 1fr;
 }
 
-@media (max-width: 900px) {
+.generate-submit {
+  align-self: stretch;
+}
+
+@media (min-width: 769px) {
+  .generate-section {
+    background: #fff;
+  }
+
+  .generate-submit {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .generate-panel {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .generate-header {
+    flex-direction: column;
+  }
+
+  .generate-header .ui-btn {
+    width: 100%;
+  }
+
   .duration-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .generate-fields {
     grid-template-columns: 1fr;
+  }
+
+  .generate-fields .ui-btn {
+    width: 100%;
+  }
+
+  .mode-tabs {
+    flex-direction: column;
+  }
+
+  .mode-tabs .ui-chip {
+    width: 100%;
+    justify-content: center;
   }
 }
