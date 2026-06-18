@@ -4,8 +4,13 @@ import crypto from 'crypto';
 import { redis } from './cache_system.js';
 import {
   CJZS_PREFIX,
+  ZHILIAO_PREFIX,
+  ZHIXIAO_PREFIX,
   assertCjzsKey,
-  assertNotCjzsKey,
+  assertFlowxKey,
+  assertZhiliaoKey,
+  assertZhixiaoKey,
+  buildPhoneActivationKey,
   normalizeCjzsLevel
 } from './_activation_core.js';
 
@@ -125,7 +130,14 @@ function normalizeCjzsPermissions(input) {
 
 function applyPluginFilter(query, plugin) {
   if (plugin === 'cjzs') return query.ilike('key', `${CJZS_PREFIX}%`);
-  if (plugin === 'flowx') return query.not('key', 'ilike', `${CJZS_PREFIX}%`);
+  if (plugin === 'zhiliao') return query.ilike('key', `${ZHILIAO_PREFIX}%`);
+  if (plugin === 'zhixiao') return query.ilike('key', `${ZHIXIAO_PREFIX}%`);
+  if (plugin === 'flowx') {
+    return query
+      .not('key', 'ilike', `${CJZS_PREFIX}%`)
+      .not('key', 'ilike', `${ZHILIAO_PREFIX}%`)
+      .not('key', 'ilike', `${ZHIXIAO_PREFIX}%`);
+  }
   return query;
 }
 
@@ -139,11 +151,83 @@ function applyListFilters(query, { device_id, key, duration_days, is_used }) {
 
 function resolveCreatePrefix(plugin, prefix) {
   if (plugin === 'cjzs') return { prefix: 'CJZS' };
+  if (plugin === 'zhiliao') return { prefix: 'ZHILIAO' };
+  if (plugin === 'zhixiao') return { prefix: 'ZHIXIAO' };
   const resolved = String(prefix || 'XHS').trim().toUpperCase();
   if (resolved.startsWith('CJZS')) {
     return { error: 'FlowX 插件不能使用 CJZS 前缀' };
   }
+  if (resolved.startsWith('ZHILIAO')) {
+    return { error: 'FlowX 插件不能使用 ZHILIAO 前缀' };
+  }
+  if (resolved.startsWith('ZHIXIAO')) {
+    return { error: 'FlowX 插件不能使用 ZHIXIAO 前缀' };
+  }
   return { prefix: resolved };
+}
+
+function assertPluginKey(plugin, key) {
+  if (plugin === 'cjzs') return assertCjzsKey(key);
+  if (plugin === 'zhiliao') return assertZhiliaoKey(key);
+  if (plugin === 'zhixiao') return assertZhixiaoKey(key);
+  return assertFlowxKey(key);
+}
+
+async function findExistingKeys(keys) {
+  const unique = [...new Set(keys.filter(Boolean))];
+  if (!unique.length) return [];
+  const { data, error } = await supabase.from('activation_keys').select('key').in('key', unique);
+  if (error) throw error;
+  return (data || []).map((row) => row.key);
+}
+
+function collectKeysToInsert(body, resolvedPrefix, plugin) {
+  const { key, count = 1, phone, phones } = body;
+  const keysToInsert = [];
+  const pushKey = (rawKey) => {
+    const normalizedKey = String(rawKey).trim().toUpperCase();
+    const keyCheck = assertPluginKey(plugin, normalizedKey);
+    if (!keyCheck.ok) {
+      throw new Error(keyCheck.error);
+    }
+    keysToInsert.push({
+      key: normalizedKey,
+      duration_days: body.duration_days,
+      is_used: false,
+      permissions: body.normalizedPermissions ?? null
+    });
+  };
+
+  if (key) {
+    pushKey(key);
+    return keysToInsert;
+  }
+
+  if (phone) {
+    const built = buildPhoneActivationKey(resolvedPrefix, phone);
+    if (!built.ok) throw new Error(built.error);
+    pushKey(built.value);
+    return keysToInsert;
+  }
+
+  if (Array.isArray(phones) && phones.length) {
+    for (const item of phones) {
+      const built = buildPhoneActivationKey(resolvedPrefix, item);
+      if (!built.ok) throw new Error(built.error);
+      pushKey(built.value);
+    }
+    return keysToInsert;
+  }
+
+  for (let i = 0; i < count; i++) {
+    keysToInsert.push({
+      key: generateRandomKey(resolvedPrefix),
+      duration_days: body.duration_days,
+      is_used: false,
+      permissions: body.normalizedPermissions ?? null
+    });
+  }
+  return keysToInsert;
 }
 
 function validateExpiresAt(expires_at) {
@@ -251,7 +335,7 @@ export default async function handler(req, res) {
 
       // 3. 创建激活码 (支持随机生成和批量)
       if (action === "create") {
-        const { key, duration_days, count = 1, prefix = 'XHS', permissions, plugin } = body;
+        const { key, duration_days, count = 1, prefix = 'XHS', permissions, plugin, phone, phones } = body;
         const prefixResult = resolveCreatePrefix(plugin, prefix);
         if (prefixResult.error) {
           return res.status(400).json({ error: prefixResult.error });
@@ -260,22 +344,27 @@ export default async function handler(req, res) {
         const normalizedPermissions =
           plugin === 'cjzs'
             ? normalizeCjzsPermissions(permissions)
-            : normalizePermissions(permissions);
-        const keysToInsert = [];
+            : plugin === 'flowx'
+              ? normalizePermissions(permissions)
+              : null;
 
-        if (key) {
-          const keyCheck = plugin === 'cjzs' ? assertCjzsKey(key) : assertNotCjzsKey(key);
-          if (!keyCheck.ok) return res.status(400).json({ error: keyCheck.error });
-          keysToInsert.push({ key, duration_days, is_used: false, permissions: normalizedPermissions });
-        } else {
-          for (let i = 0; i < count; i++) {
-            keysToInsert.push({
-              key: generateRandomKey(resolvedPrefix),
-              duration_days,
-              is_used: false,
-              permissions: normalizedPermissions
-            });
-          }
+        let keysToInsert = [];
+        try {
+          keysToInsert = collectKeysToInsert(
+            { key, count, phone, phones, duration_days, normalizedPermissions },
+            resolvedPrefix,
+            plugin
+          );
+        } catch (err) {
+          return res.status(400).json({ error: err.message || '创建参数无效' });
+        }
+
+        const existing = await findExistingKeys(keysToInsert.map((item) => item.key));
+        if (existing.length) {
+          return res.status(409).json({
+            error: '部分激活码已存在',
+            duplicates: existing
+          });
         }
 
         const { data, error } = await supabase

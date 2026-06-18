@@ -222,6 +222,21 @@ export interface XhsSearchRequest {
 
 ---
 
+## 知聊 / 知销桌面端激活 API
+
+| 产品 | 地址 | 前缀 |
+|------|------|------|
+| 知聊 | `POST /api/activation_zhiliao?action=activate\|verify` | `ZHILIAO-` |
+| 知销 | `POST /api/activation_zhixiao?action=activate\|verify` | `ZHIXIAO-` |
+
+- **请求体**: `{ "key": "ZHILIAO-13800138000", "device_id": "..." }`
+- **响应**: 加密 JSON `{ "e", "i" }`（盐值与 FlowX `activation_v2` 相同）
+- **解密后 `data`**: `{ key, expires_at, is_used, is_licensed, is_expired, duration_days }`
+
+管理员可通过 `phone` / `phones` / `key` 创建激活码，见下方「创建激活码」。
+
+---
+
 ## 管理端 API（admin.html 专用）
 
 **基址**: `https://abc.no996ai.cn/api/activation`  
@@ -237,18 +252,46 @@ Body: { "password": "..." }
 ### 列表（支持插件筛选）
 
 ```
-GET /api/activation?action=list&page=1&pageSize=10&plugin=flowx|cjzs|all
+GET /api/activation?action=list&page=1&pageSize=10&plugin=flowx|cjzs|zhiliao|zhixiao|all
 Header: x-admin-auth: ***
 ```
 
 | 参数 | 说明 |
 |------|------|
-| `plugin=flowx` | 排除 `CJZS-` 前缀 |
+| `plugin=flowx` | 排除 `CJZS-` / `ZHILIAO-` / `ZHIXIAO-` 前缀 |
 | `plugin=cjzs` | 仅 `CJZS-%` |
+| `plugin=zhiliao` | 仅 `ZHILIAO-%` |
+| `plugin=zhixiao` | 仅 `ZHIXIAO-%` |
 | `plugin=all` 或省略 | 全量 |
 | `key`, `device_id`, `is_used`, `duration_days` | 筛选 |
 
 ### 创建激活码
+
+随机批量：
+
+```
+POST /api/activation?action=create
+Body: {
+  "plugin": "zhiliao",
+  "count": 5,
+  "duration_days": 30
+}
+```
+
+自定义完整码：
+
+```
+Body: { "plugin": "zhiliao", "key": "ZHILIAO-VIP-001", "duration_days": 365 }
+```
+
+前缀 + 手机号（单个或批量）：
+
+```
+Body: { "plugin": "zhixiao", "phone": "13800138000", "duration_days": 90 }
+Body: { "plugin": "zhixiao", "phones": ["13800138000", "13900139000"], "duration_days": 90 }
+```
+
+CJZS / FlowX 示例：
 
 ```
 POST /api/activation?action=create
@@ -262,7 +305,10 @@ Body: {
 ```
 
 - `plugin=cjzs` 强制 prefix 为 `CJZS`
-- `plugin=flowx` 拒绝 `CJZS` 前缀
+- `plugin=zhiliao` 强制 prefix 为 `ZHILIAO`
+- `plugin=zhixiao` 强制 prefix 为 `ZHIXIAO`
+- `plugin=flowx` 拒绝 `CJZS` / `ZHILIAO` / `ZHIXIAO` 前缀
+- 重复 `key` 返回 HTTP `409`
 
 ### 更新过期时间（精确 ISO8601）
 

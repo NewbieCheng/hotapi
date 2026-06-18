@@ -16,9 +16,12 @@
 ├── index.js                 # 根路径占位页
 ├── api/
 │   ├── _activation_core.js  # 激活共享：加密、前缀校验、CJZS user 映射
+│   ├── _activation_desktop.js  # 知聊/知销桌面端 activate/verify 工厂
 │   ├── activation.js        # 管理端 + 旧版明文 activate/verify
 │   ├── activation_v2.js     # FlowX 客户端（加密 activate/verify/更新）
 │   ├── activation_cjzs.js   # 采集助手客户端（加密 activate/verify）
+│   ├── activation_zhiliao.js # 知聊桌面端（加密 activate/verify）
+│   ├── activation_zhixiao.js # 知销桌面端（加密 activate/verify）
 │   ├── proxy.js             # 搜索 API 中转
 │   └── cache_system.js      # Redis 缓存 / 限流
 └── sql/
@@ -35,6 +38,8 @@
 | `/api/activation` | `api/activation.js` | **管理后台专用** + 明文客户端（遗留） |
 | `/api/activation_v2` | `api/activation_v2.js` | **FlowX** 插件激活（AES 加密响应） |
 | `/api/activation_cjzs` | `api/activation_cjzs.js` | **采集助手 CJZS** 激活（AES 加密响应） |
+| `/api/activation_zhiliao` | `api/activation_zhiliao.js` | **知聊** 桌面端激活（AES 加密响应） |
+| `/api/activation_zhixiao` | `api/activation_zhixiao.js` | **知销** 桌面端激活（AES 加密响应） |
 | `/admin` | `admin.html` | 激活码管理 UI |
 
 配置见 [`vercel.json`](vercel.json)。
@@ -47,8 +52,10 @@
 
 | 插件 | 客户端 API | 激活码前缀 | 权限字段 |
 |------|-----------|-----------|---------|
-| FlowX（今天不加班） | `/api/activation_v2` | `XHS-` 等（**非** `CJZS-`） | `ac` + `ai/cp/co/...` 功能开关 |
+| FlowX（今天不加班） | `/api/activation_v2` | `XHS-` 等（**非** `CJZS-` / `ZHILIAO-` / `ZHIXIAO-`） | `ac` + `ai/cp/co/...` 功能开关 |
 | 采集助手 CJZS | `/api/activation_cjzs` | 仅 `CJZS-` | 主要读 `permissions.ac` → `user.vips` |
+| 知聊（WeFlow 桌面） | `/api/activation_zhiliao` | 仅 `ZHILIAO-` | `permissions` 为空 = 全功能 |
+| 知销（Private Kings） | `/api/activation_zhixiao` | 仅 `ZHIXIAO-` | `permissions` 为空 = 全功能 |
 
 共享逻辑在 [`api/_activation_core.js`](api/_activation_core.js)：
 
@@ -92,7 +99,9 @@ Header: x-admin-auth: ***
 ```
 
 - `plugin=cjzs` → 仅 `CJZS-%`
-- `plugin=flowx` → 排除 `CJZS-%`
+- `plugin=zhiliao` → 仅 `ZHILIAO-%`
+- `plugin=zhixiao` → 仅 `ZHIXIAO-%`
+- `plugin=flowx` → 排除 `CJZS-%` / `ZHILIAO-%` / `ZHIXIAO-%`
 - `plugin=all` 或省略 → 全量（兼容旧行为）
 - 其他：`key`, `device_id`, `is_used`, `duration_days`
 
@@ -109,7 +118,19 @@ Header: x-admin-auth: ***
 ```
 
 - `plugin=cjzs` → 强制 prefix `CJZS`
-- `plugin=flowx` → 拒绝 `CJZS` 前缀
+- `plugin=zhiliao` → 强制 prefix `ZHILIAO`
+- `plugin=zhixiao` → 强制 prefix `ZHIXIAO`
+- `plugin=flowx` → 拒绝 `CJZS` / `ZHILIAO` / `ZHIXIAO` 前缀
+
+支持三种生成方式（`action=create`）：
+
+| 模式 | 参数 | 示例 |
+|------|------|------|
+| 随机批量 | `count` + `prefix` | `{ "plugin":"zhiliao", "count":5, "duration_days":30 }` |
+| 自定义完整码 | `key` | `{ "plugin":"zhiliao", "key":"ZHILIAO-VIP-001", "duration_days":365 }` |
+| 前缀+手机号 | `phone` 或 `phones[]` | `{ "plugin":"zhixiao", "phone":"13800138000", "duration_days":90 }` |
+
+手机号模式自动生成 `ZHILIAO-13800138000` 格式；重复 key 返回 `409`。
 
 ### update_expires_at
 
@@ -141,6 +162,18 @@ Response: { e, i }
 解密后含 data.user: { name, email, vips[], isVip }
 ```
 
+### 知聊 / 知销 — `activation_zhiliao.js` / `activation_zhixiao.js`
+
+```
+POST /api/activation_zhiliao?action=activate|verify
+POST /api/activation_zhixiao?action=activate|verify
+Body: { key, device_id }
+Response: { e, i }
+解密后含 data: { key, expires_at, is_licensed, is_expired, ... }
+```
+
+激活码格式：`ZHILIAO-13800138000` / `ZHIXIAO-13800138000`（前缀 + 11 位手机号）或管理员自定义完整码。
+
 详见 [`API_DOC.md`](API_DOC.md) 采集助手章节。
 
 ---
@@ -162,12 +195,13 @@ Response: { e, i }
 ## admin.html 结构
 
 ```
-[FlowX] [采集助手] [系统选项]     ← 顶层插件页签
-  └─ [激活码库] [快捷生成] [选项]  ← 子页签（FlowX / CJZS）
+[FlowX] [采集助手] [知聊] [知销] [系统选项]     ← 顶层插件页签
+  └─ [激活码库] [快捷生成] [选项]  ← 子页签（各插件）
 ```
 
 - FlowX：完整功能权限 + 分发渠道
 - CJZS：仅平台 `ac` chip
+- 知聊 / 知销：会员周期 + 随机 / 自定义 / 手机号三种生成方式
 - 过期时间：完整 ISO 展示 + 弹窗精确编辑
 - 偏好存 `localStorage`（`admin_prefs_flowx` / `admin_prefs_cjzs` / `admin_prefs_system`）
 

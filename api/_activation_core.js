@@ -3,6 +3,10 @@ import { redis } from './cache_system.js';
 
 export const API_SALT = 'XHS_NO_996_SECURE_API_SALT_V2_888!@#';
 export const CJZS_PREFIX = 'CJZS-';
+export const ZHILIAO_PREFIX = 'ZHILIAO-';
+export const ZHIXIAO_PREFIX = 'ZHIXIAO-';
+
+export const DESKTOP_PREFIXES = [ZHILIAO_PREFIX, ZHIXIAO_PREFIX];
 
 export const DEFAULT_CJZS_VIPS = [
   'xiaohongshu',
@@ -99,10 +103,72 @@ export function assertCjzsKey(key) {
 }
 
 export function assertNotCjzsKey(key) {
-  if (key && String(key).toUpperCase().startsWith(CJZS_PREFIX)) {
+  return assertFlowxKey(key);
+}
+
+export function isDesktopActivationKey(key) {
+  const upper = String(key || '').toUpperCase();
+  return DESKTOP_PREFIXES.some((prefix) => upper.startsWith(prefix));
+}
+
+export function assertZhiliaoKey(key) {
+  if (!key || !String(key).toUpperCase().startsWith(ZHILIAO_PREFIX)) {
+    return { ok: false, error: '该激活码不适用于知聊' };
+  }
+  return { ok: true };
+}
+
+export function assertZhixiaoKey(key) {
+  if (!key || !String(key).toUpperCase().startsWith(ZHIXIAO_PREFIX)) {
+    return { ok: false, error: '该激活码不适用于知销' };
+  }
+  return { ok: true };
+}
+
+export function assertFlowxKey(key) {
+  const upper = String(key || '').toUpperCase();
+  if (upper.startsWith(CJZS_PREFIX)) {
+    return { ok: false, error: '该激活码不适用于 FlowX 插件' };
+  }
+  if (DESKTOP_PREFIXES.some((prefix) => upper.startsWith(prefix))) {
     return { ok: false, error: '该激活码不适用于 FlowX 插件' };
   }
   return { ok: true };
+}
+
+export function normalizeChinaMobile(phone) {
+  const digits = String(phone ?? '').replace(/\D/g, '');
+  if (!/^1[3-9]\d{9}$/.test(digits)) {
+    return { ok: false, error: '手机号格式无效，需为 11 位中国大陆手机号' };
+  }
+  return { ok: true, value: digits };
+}
+
+export function buildPhoneActivationKey(prefix, phone) {
+  const mobile = normalizeChinaMobile(phone);
+  if (!mobile.ok) return mobile;
+  const resolvedPrefix = String(prefix || '').trim().toUpperCase();
+  if (!resolvedPrefix) {
+    return { ok: false, error: '前缀不能为空' };
+  }
+  return { ok: true, value: `${resolvedPrefix}-${mobile.value}` };
+}
+
+export function sanitizeDesktopActivationData(row) {
+  if (!row || typeof row !== 'object') return row;
+  const expired = row.expires_at && new Date(row.expires_at).getTime() < Date.now();
+  return {
+    id: row.id,
+    key: row.key,
+    duration_days: row.duration_days,
+    is_used: row.is_used,
+    used_at: row.used_at,
+    expires_at: row.expires_at,
+    device_id: row.device_id,
+    note: row.note ?? null,
+    is_expired: Boolean(expired),
+    is_licensed: Boolean(row.is_used && !expired)
+  };
 }
 
 export function normalizeCjzsLevel(raw) {
