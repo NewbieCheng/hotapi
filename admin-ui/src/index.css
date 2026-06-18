@@ -1,19 +1,23 @@
 :root {
-  --admin-bg: #0a0e17;
-  --admin-surface: rgba(22, 28, 42, 0.82);
-  --admin-surface-strong: #161c2a;
-  --admin-border: rgba(255, 255, 255, 0.08);
-  --admin-text: #f4f7fb;
-  --admin-muted: #94a3b8;
-  --admin-primary: #6366f1;
-  --admin-primary-2: #22d3ee;
-  --admin-primary-glow: rgba(99, 102, 241, 0.35);
-  --admin-danger: #ef4444;
-  --admin-success: #10b981;
-  --admin-warning: #f59e0b;
-  --admin-radius: 18px;
-  --admin-font: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
-  --admin-display: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --admin-ink: #0b0d12;
+  --admin-panel: #141820;
+  --admin-surface: rgba(20, 24, 32, 0.88);
+  --admin-border: rgba(255, 255, 255, 0.09);
+  --admin-paper: #e8ecf2;
+  --admin-text: #e8ecf2;
+  --admin-muted: #8b95a8;
+  --admin-primary: #7c6fe8;
+  --admin-primary-2: #5b4fd4;
+  --admin-primary-glow: rgba(124, 111, 232, 0.32);
+  --admin-danger: #e05252;
+  --admin-success: #2f8f6b;
+  --admin-warning: #c9a227;
+  --admin-radius: 16px;
+  --admin-radius-sm: 10px;
+  --admin-font: 'DM Sans', 'Noto Sans SC', system-ui, sans-serif;
+  --admin-display: 'Fraunces', 'Noto Serif SC', serif;
+  --admin-mono: 'IBM Plex Mono', 'Consolas', monospace;
+  --admin-bg: var(--admin-ink);
 }
 
 * {
@@ -31,9 +35,10 @@ body {
   font-family: var(--admin-font);
   color: var(--admin-text);
   background:
-    radial-gradient(circle at 85% 10%, color-mix(in srgb, var(--admin-primary) 18%, transparent), transparent 40%),
-    radial-gradient(circle at 10% 90%, color-mix(in srgb, var(--admin-primary-2) 12%, transparent), transparent 45%),
+    radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--admin-primary) 14%, transparent), transparent 38%),
+    radial-gradient(circle at 8% 92%, color-mix(in srgb, var(--admin-success) 10%, transparent), transparent 42%),
     var(--admin-bg);
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -47,91 +52,16 @@ a {
   color: inherit;
 }
 
-.glass-card {
-  background: var(--admin-surface);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: none;
-  border-radius: 12px;
-  padding: 10px 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-2));
-  color: white;
-}
-
-.btn-ghost {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--admin-text);
-  border: 1px solid var(--admin-border);
-}
-
-.btn-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #fecaca;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-}
-
-.input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid var(--admin-border);
-  background: rgba(8, 12, 20, 0.65);
-  color: var(--admin-text);
-  outline: none;
-}
-
-.input:focus {
-  border-color: color-mix(in srgb, var(--admin-primary) 70%, white);
-  box-shadow: 0 0 0 4px var(--admin-primary-glow);
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--admin-border);
-  background: rgba(255, 255, 255, 0.03);
-  font-size: 12px;
-}
-
-.badge-used {
-  color: #86efac;
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.35);
-}
-
-.badge-unused {
-  color: #fde68a;
-  background: rgba(245, 158, 11, 0.12);
-  border-color: rgba(245, 158, 11, 0.35);
-}
-
 .mono {
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-family: var(--admin-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

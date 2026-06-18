@@ -1,10 +1,23 @@
 import type { PluginId } from '../types'
 
-export const PLUGINS: Record<PluginId, { label: string; prefix: string; tagline: string }> = {
-  flowx: { label: 'FlowX', prefix: 'XHS', tagline: '内容矩阵与分发中枢' },
-  cjzs: { label: '采集助手', prefix: 'CJZS', tagline: '社媒数据采集引擎' },
+export interface PluginConfig {
+  label: string
+  formerName?: string
+  prefix: string
+  tagline: string
+}
+
+export const PLUGINS: Record<PluginId, PluginConfig> = {
+  flowx: { label: '知发', formerName: 'FlowX', prefix: 'XHS', tagline: '内容矩阵与分发中枢' },
+  cjzs: { label: '知源', formerName: '采集助手', prefix: 'CJZS', tagline: '社媒数据采集引擎' },
   zhiliao: { label: '知聊', prefix: 'ZHILIAO', tagline: '本地微信数据工作台' },
   zhixiao: { label: '知销', prefix: 'ZHIXIAO', tagline: '信笺参谋 · AI 销售助手' }
+}
+
+export function formatPluginNamesLine(): string {
+  return Object.values(PLUGINS)
+    .map((cfg) => cfg.label)
+    .join(' · ')
 }
 
 export interface PermissionDef {

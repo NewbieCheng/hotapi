@@ -1,91 +1,96 @@
 .login-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: minmax(340px, 1.15fr) minmax(360px, 0.85fr);
 }
 
 .login-hero {
   display: flex;
   align-items: center;
-  padding: 64px;
+  padding: clamp(32px, 5vw, 72px);
   background:
-    linear-gradient(135deg, rgba(99, 102, 241, 0.18), transparent 55%),
-    linear-gradient(225deg, rgba(34, 211, 238, 0.12), transparent 50%);
+    radial-gradient(circle at 18% 22%, rgba(124, 111, 232, 0.14), transparent 48%),
+    radial-gradient(circle at 82% 78%, rgba(47, 143, 107, 0.1), transparent 45%),
+    linear-gradient(165deg, #10141c 0%, #0b0d12 55%, #090a0f 100%);
+  border-right: 1px solid var(--admin-border);
 }
 
 .login-hero-inner {
-  max-width: 520px;
+  max-width: 560px;
 }
 
 .login-kicker {
-  letter-spacing: 0.24em;
-  font-size: 11px;
+  letter-spacing: 0.28em;
+  font-size: 10px;
+  text-transform: uppercase;
   color: var(--admin-muted);
-  margin: 0 0 16px;
+  margin: 0 0 18px;
 }
 
 .login-hero h1 {
   margin: 0 0 12px;
-  font-size: clamp(32px, 4vw, 48px);
-  line-height: 1.1;
   font-family: var(--admin-display);
+  font-size: clamp(34px, 4.2vw, 52px);
+  line-height: 1.06;
+  font-weight: 600;
 }
 
-.login-hero p:last-child {
-  margin: 0;
-  color: var(--admin-muted);
+.login-subline {
+  margin: 0 0 24px;
+  color: color-mix(in srgb, var(--admin-paper) 72%, var(--admin-muted));
   font-size: 15px;
   line-height: 1.7;
 }
 
-.login-form {
-  align-self: center;
-  justify-self: center;
-  width: min(420px, calc(100% - 48px));
-  padding: 36px;
+.login-footnote {
+  margin: 20px 0 0;
+  font-size: 12px;
+  color: var(--admin-muted);
+}
+
+.login-form-section {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(24px, 4vw, 48px);
 }
 
-.login-form h2 {
-  margin: 0;
-  font-size: 24px;
+.login-form {
+  width: min(420px, 100%);
+  padding: 34px 30px;
 }
 
-.login-form > p {
-  margin: 0 0 8px;
+.login-form-head h2 {
+  margin: 0 0 6px;
+  font-family: var(--admin-display);
+  font-size: 26px;
+}
+
+.login-form-head p {
+  margin: 0 0 22px;
   color: var(--admin-muted);
   font-size: 14px;
 }
 
-.login-form label {
+.login-form-fields {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--admin-muted);
+  gap: 16px;
 }
 
-.login-error {
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(239, 68, 68, 0.12);
-  color: #fecaca;
-  font-size: 13px;
-}
-
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .login-page {
     grid-template-columns: 1fr;
   }
 
   .login-hero {
-    padding: 40px 24px 0;
-    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--admin-border);
+    padding-bottom: 28px;
   }
 
-  .login-form {
-    margin: 24px auto 40px;
+  .login-form-section {
+    padding-top: 8px;
+    padding-bottom: 40px;
   }
 }

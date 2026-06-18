@@ -13,6 +13,7 @@ import {
   parseDesktopPermissions,
   parseFlowxPermissions
 } from '../permissions/definitions'
+import { Button } from './ui'
 import './PermissionBuilder.css'
 
 export type PermissionState =
@@ -63,9 +64,9 @@ export function PermissionBuilder({ plugin, state, onChange }: PermissionBuilder
     return (
       <div className="permission-builder">
         <div className="permission-templates">
-          <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'cjzs', channels: CJZS_PLATFORMS.map((c) => c.key), level: 'plus' })}>全平台</button>
-          <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'cjzs', channels: ['xiaohongshu', 'douyin', 'bilibili', 'kuaishou'], level: 'plus' })}>国内主流</button>
-          <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'cjzs', channels: CJZS_PLATFORMS.map((c) => c.key), level: 'pro' })}>全平台 Pro</button>
+          <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'cjzs', channels: CJZS_PLATFORMS.map((c) => c.key), level: 'plus' })}>全平台</Button>
+          <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'cjzs', channels: ['xiaohongshu', 'douyin', 'bilibili', 'kuaishou'], level: 'plus' })}>国内主流</Button>
+          <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'cjzs', channels: CJZS_PLATFORMS.map((c) => c.key), level: 'pro' })}>全平台 Pro</Button>
         </div>
         <div className="permission-levels">
           {(['plus', 'pro', 'ultra'] as const).map((level) => (
@@ -106,9 +107,9 @@ export function PermissionBuilder({ plugin, state, onChange }: PermissionBuilder
     return (
       <div className="permission-builder">
         <div className="permission-templates">
-          <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'desktop', values: desktopTemplate(plugin, 'all'), level: state.level })}>全开</button>
-          <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'desktop', values: desktopTemplate(plugin, 'standard'), level: state.level })}>标准</button>
-          <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'desktop', values: desktopTemplate(plugin, 'basic'), level: state.level })}>基础</button>
+          <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'desktop', values: desktopTemplate(plugin, 'all'), level: state.level })}>全开</Button>
+          <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'desktop', values: desktopTemplate(plugin, 'standard'), level: state.level })}>标准</Button>
+          <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'desktop', values: desktopTemplate(plugin, 'basic'), level: state.level })}>基础</Button>
         </div>
         <div className="permission-levels">
           {(['plus', 'pro'] as const).map((level) => (
@@ -142,8 +143,8 @@ export function PermissionBuilder({ plugin, state, onChange }: PermissionBuilder
   return (
     <div className="permission-builder">
       <div className="permission-templates">
-        <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'flowx', values: Object.fromEntries(FLOWX_PERMISSIONS.map((p) => [p.key, true])), channels: FLOWX_CHANNELS.map((c) => c.key) })}>旗舰全开</button>
-        <button type="button" className="btn btn-ghost" onClick={() => onChange({ kind: 'flowx', values: { ai: true, cp: true, co: false, sy: true, ed: true, hr: false, bk: false, pl: false, fw: true }, channels: ['xiaohongshu', 'douyin', 'weixin', 'toutiao'] })}>标准基础</button>
+        <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'flowx', values: Object.fromEntries(FLOWX_PERMISSIONS.map((p) => [p.key, true])), channels: FLOWX_CHANNELS.map((c) => c.key) })}>旗舰全开</Button>
+        <Button variant="ghost" type="button" onClick={() => onChange({ kind: 'flowx', values: { ai: true, cp: true, co: false, sy: true, ed: true, hr: false, bk: false, pl: false, fw: true }, channels: ['xiaohongshu', 'douyin', 'weixin', 'toutiao'] })}>标准基础</Button>
       </div>
       <div className="permission-grid">
         {FLOWX_PERMISSIONS.map((def) => (

@@ -1,5 +1,6 @@
 .key-table-wrap {
   overflow: auto;
+  padding: 0;
 }
 
 .key-table {

@@ -1,5 +1,6 @@
 import type { ActivationKeyRow, PluginId } from '../types'
 import { parseCjzsPermissions } from '../permissions/definitions'
+import { Badge, Button, Card } from './ui'
 import './KeyTable.css'
 
 interface KeyTableProps {
@@ -46,12 +47,12 @@ export function KeyTable({
   const allSelected = rows.length > 0 && rows.every((row) => selected.has(row.id))
 
   return (
-    <div className="key-table-wrap glass-card">
+    <Card className="key-table-wrap">
       <table className="key-table">
         <thead>
           <tr>
             <th>
-              <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} />
+              <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} aria-label="全选" />
             </th>
             <th>激活码</th>
             <th>设备码</th>
@@ -67,15 +68,15 @@ export function KeyTable({
           {rows.map((row) => (
             <tr key={row.id}>
               <td>
-                <input type="checkbox" checked={selected.has(row.id)} onChange={() => onToggle(row.id)} />
+                <input type="checkbox" checked={selected.has(row.id)} onChange={() => onToggle(row.id)} aria-label={`选择 ${row.key}`} />
               </td>
               <td className="mono">{row.key}</td>
               <td className="mono">{row.device_id || '—'}</td>
               <td>{row.duration_days} 天</td>
               <td>
-                <span className={`chip ${row.is_used ? 'badge-used' : 'badge-unused'}`}>
+                <Badge tone={row.is_used ? 'success' : 'warning'}>
                   {row.is_used ? '已激活' : '待使用'}
-                </span>
+                </Badge>
               </td>
               {plugin === 'cjzs' ? (
                 <td>{parseCjzsPermissions(row.permissions).level.toUpperCase()}</td>
@@ -83,10 +84,10 @@ export function KeyTable({
               <td>{permissionSummary(plugin, row)}</td>
               <td>{formatDate(row.expires_at)}</td>
               <td className="key-actions">
-                <button type="button" className="btn btn-ghost" onClick={() => onCopy(row.key)}>复制</button>
-                <button type="button" className="btn btn-ghost" onClick={() => onEditPermissions(row)}>权限</button>
-                <button type="button" className="btn btn-ghost" onClick={() => onEditExpires(row)}>过期</button>
-                <button type="button" className="btn btn-danger" onClick={() => onDelete(row.id)}>删除</button>
+                <Button variant="ghost" onClick={() => onCopy(row.key)}>复制</Button>
+                <Button variant="ghost" onClick={() => onEditPermissions(row)}>权限</Button>
+                <Button variant="ghost" onClick={() => onEditExpires(row)}>过期</Button>
+                <Button variant="danger" onClick={() => onDelete(row.id)}>删除</Button>
               </td>
             </tr>
           ))}
@@ -97,6 +98,6 @@ export function KeyTable({
           ) : null}
         </tbody>
       </table>
-    </div>
+    </Card>
   )
 }

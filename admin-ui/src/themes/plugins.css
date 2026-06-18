@@ -1,26 +1,26 @@
 [data-theme='flowx'] {
-  --admin-primary: #8b5cf6;
-  --admin-primary-2: #22d3ee;
-  --admin-primary-glow: rgba(139, 92, 246, 0.35);
+  --admin-primary: #7c6fe8;
+  --admin-primary-2: #9d93f0;
+  --admin-primary-glow: rgba(124, 111, 232, 0.32);
 }
 
 [data-theme='cjzs'] {
-  --admin-primary: #10b981;
-  --admin-primary-2: #3b82f6;
-  --admin-primary-glow: rgba(16, 185, 129, 0.35);
+  --admin-primary: #2f8f6b;
+  --admin-primary-2: #3cb88a;
+  --admin-primary-glow: rgba(47, 143, 107, 0.32);
 }
 
 [data-theme='zhiliao'] {
   --admin-primary: #8b7355;
   --admin-primary-2: #c4a574;
-  --admin-primary-glow: rgba(139, 115, 85, 0.35);
-  --admin-display: 'Noto Serif SC', 'Songti SC', serif;
+  --admin-primary-glow: rgba(139, 115, 85, 0.32);
+  --admin-display: 'Noto Serif SC', 'Fraunces', serif;
 }
 
 [data-theme='zhixiao'] {
   --admin-primary: #b84332;
-  --admin-primary-2: #151210;
-  --admin-primary-glow: rgba(184, 67, 50, 0.35);
-  --admin-display: 'Noto Serif SC', 'Songti SC', serif;
+  --admin-primary-2: #d45a48;
+  --admin-primary-glow: rgba(184, 67, 50, 0.32);
+  --admin-display: 'Noto Serif SC', 'Fraunces', serif;
   --admin-bg: #120f0d;
 }

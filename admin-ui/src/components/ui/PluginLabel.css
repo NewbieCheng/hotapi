@@ -1,0 +1,31 @@
+.ui-plugin-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ui-plugin-label--stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.ui-plugin-label__name {
+  font-weight: 700;
+  font-family: var(--admin-display);
+  color: var(--admin-text);
+}
+
+.ui-plugin-label--sm .ui-plugin-label__name {
+  font-size: 15px;
+}
+
+.ui-plugin-label--md .ui-plugin-label__name {
+  font-size: 17px;
+}
+
+.ui-plugin-label__former {
+  font-size: 11px;
+  color: var(--admin-muted);
+  letter-spacing: 0.02em;
+}

@@ -1,0 +1,52 @@
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ui-badge--success {
+  color: #86efac;
+  background: rgba(47, 143, 107, 0.14);
+  border-color: rgba(47, 143, 107, 0.35);
+}
+
+.ui-badge--warning {
+  color: #fde68a;
+  background: rgba(201, 162, 39, 0.14);
+  border-color: rgba(201, 162, 39, 0.35);
+}
+
+.ui-badge--danger {
+  color: #fecaca;
+  background: rgba(224, 82, 82, 0.14);
+  border-color: rgba(224, 82, 82, 0.35);
+}
+
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--admin-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.ui-chip:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--admin-primary) 80%, white);
+  outline-offset: 2px;
+}
+
+.ui-chip--active {
+  border-color: color-mix(in srgb, var(--admin-primary) 70%, white);
+  background: color-mix(in srgb, var(--admin-primary) 16%, transparent);
+}

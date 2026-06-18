@@ -1,3 +1,4 @@
+import { Card, Button, TextField, Select } from './ui'
 import './FilterBar.css'
 
 export interface ListFilters {
@@ -15,38 +16,33 @@ interface FilterBarProps {
 
 export function FilterBar({ filters, onChange, onSearch }: FilterBarProps) {
   return (
-    <div className="filter-bar glass-card">
-      <input
-        className="input"
+    <Card className="filter-bar">
+      <TextField
         placeholder="激活码关键词"
         value={filters.key}
         onChange={(e) => onChange({ ...filters, key: e.target.value })}
       />
-      <input
-        className="input"
+      <TextField
         placeholder="设备码"
         value={filters.device_id}
         onChange={(e) => onChange({ ...filters, device_id: e.target.value })}
       />
-      <input
-        className="input"
+      <TextField
         placeholder="有效期天数"
         value={filters.duration_days}
         onChange={(e) => onChange({ ...filters, duration_days: e.target.value })}
       />
-      <select
-        className="input"
+      <Select
+        options={[
+          { value: '', label: '全部状态' },
+          { value: 'true', label: '已激活' },
+          { value: 'false', label: '未激活' }
+        ]}
         value={filters.is_used}
         onChange={(e) => onChange({ ...filters, is_used: e.target.value })}
-      >
-        <option value="">全部状态</option>
-        <option value="true">已激活</option>
-        <option value="false">未激活</option>
-      </select>
-      <button className="btn btn-primary" type="button" onClick={onSearch}>
-        筛选
-      </button>
-    </div>
+      />
+      <Button type="button" onClick={onSearch}>筛选</Button>
+    </Card>
   )
 }
 

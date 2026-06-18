@@ -7,6 +7,7 @@ import {
   permissionStateToPayload,
   type PermissionState
 } from './PermissionBuilder'
+import { Alert, Button, Card, Chip, TextArea, TextField } from './ui'
 import './GeneratePanel.css'
 
 const DURATIONS = [
@@ -34,6 +35,7 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
   const [permissionState, setPermissionState] = useState<PermissionState>(() => defaultPermissionState(plugin))
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageTone, setMessageTone] = useState<'success' | 'error'>('success')
 
   const resolvedDuration = customDuration ? Number(customDuration) : duration
   const prefix = PLUGINS[plugin].prefix
@@ -64,9 +66,11 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
       }
 
       await onCreate(payload)
+      setMessageTone('success')
       setMessage(overrideCount ? `已生成 ${overrideCount} 个激活码` : '生成成功')
       onCreated()
     } catch (e) {
+      setMessageTone('error')
       setMessage(e instanceof Error ? e.message : '生成失败')
     } finally {
       setPending(false)
@@ -74,33 +78,32 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
   }
 
   return (
-    <div className="generate-panel glass-card">
+    <Card className="generate-panel">
       <div className="generate-header">
         <div>
           <h2>快捷生成</h2>
           <p>前缀 <span className="mono">{prefix}</span> · 批量上限 100</p>
         </div>
-        <button className="btn btn-ghost" type="button" onClick={() => setPermissionState(defaultPermissionState(plugin))}>
+        <Button variant="ghost" type="button" onClick={() => setPermissionState(defaultPermissionState(plugin))}>
           重置权限
-        </button>
+        </Button>
       </div>
 
       <div className="duration-grid">
         {DURATIONS.map((item) => (
-          <button
+          <Chip
             key={item.days}
-            type="button"
-            className={`duration-chip ${duration === item.days && !customDuration ? 'active' : ''}`}
+            active={duration === item.days && !customDuration}
             onClick={() => {
               setDuration(item.days)
               setCustomDuration('')
             }}
           >
             {item.label}
-          </button>
+          </Chip>
         ))}
-        <input
-          className="input duration-custom"
+        <TextField
+          className="duration-custom"
           placeholder="自定义天数"
           value={customDuration}
           onChange={(e) => setCustomDuration(e.target.value)}
@@ -113,63 +116,62 @@ export function GeneratePanel({ plugin, onCreated, onCreate }: GeneratePanelProp
           ['custom', '自定义激活码'],
           ['phone', '前缀 + 手机号']
         ] as const).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            className={`mode-tab ${mode === value ? 'active' : ''}`}
-            onClick={() => setMode(value)}
-          >
+          <Chip key={value} active={mode === value} onClick={() => setMode(value)}>
             {label}
-          </button>
+          </Chip>
         ))}
       </div>
 
       {mode === 'random' ? (
         <div className="generate-fields">
-          <label>
-            批量数量
-            <input className="input" type="number" min={1} max={100} value={count} onChange={(e) => setCount(Number(e.target.value))} />
-          </label>
-          <div className="quick-batch">
-            <button className="btn btn-ghost" type="button" disabled={pending} onClick={() => void submit(20)}>
-              一键生成 20 个
-            </button>
-          </div>
+          <TextField
+            label="批量数量"
+            type="number"
+            min={1}
+            max={100}
+            value={String(count)}
+            onChange={(e) => setCount(Number(e.target.value))}
+          />
+          <Button variant="ghost" type="button" disabled={pending} onClick={() => void submit(20)}>
+            一键生成 20 个
+          </Button>
         </div>
       ) : null}
 
       {mode === 'custom' ? (
-        <label>
-          完整激活码
-          <input
-            className="input mono"
-            value={customKey}
-            onChange={(e) => setCustomKey(e.target.value.toUpperCase())}
-            placeholder={`${prefix}-VIP-ZHANGSAN`}
-          />
-        </label>
+        <TextField
+          label="完整激活码"
+          mono
+          value={customKey}
+          onChange={(e) => setCustomKey(e.target.value.toUpperCase())}
+          placeholder={`${prefix}-VIP-ZHANGSAN`}
+        />
       ) : null}
 
       {mode === 'phone' ? (
-        <div className="generate-fields">
-          <label>
-            手机号
-            <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="13800138000" />
-          </label>
-          <label>
-            批量手机号（一行一个）
-            <textarea className="input" rows={4} value={phones} onChange={(e) => setPhones(e.target.value)} />
-          </label>
+        <div className="generate-fields generate-fields--stack">
+          <TextField
+            label="手机号"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="13800138000"
+          />
+          <TextArea
+            label="批量手机号（一行一个）"
+            rows={4}
+            value={phones}
+            onChange={(e) => setPhones(e.target.value)}
+          />
         </div>
       ) : null}
 
       <PermissionBuilder plugin={plugin} state={permissionState} onChange={setPermissionState} />
 
-      {message ? <div className="generate-message">{message}</div> : null}
+      {message ? <Alert tone={messageTone === 'error' ? 'error' : 'success'}>{message}</Alert> : null}
 
-      <button className="btn btn-primary generate-submit" type="button" disabled={pending} onClick={() => void submit()}>
-        {pending ? '生成中...' : '立即一键生成'}
-      </button>
-    </div>
+      <Button className="generate-submit" type="button" loading={pending} onClick={() => void submit()}>
+        立即一键生成
+      </Button>
+    </Card>
   )
 }

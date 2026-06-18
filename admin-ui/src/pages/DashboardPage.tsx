@@ -10,6 +10,7 @@ import {
   updatePermissions
 } from '../api/activationAdmin'
 import type { ActivationKeyRow, PluginId } from '../types'
+import { formatPluginNamesLine } from '../permissions/definitions'
 import { PluginTabs } from '../components/PluginTabs'
 import { StatsBar } from '../components/StatsBar'
 import { FilterBar, EMPTY_FILTERS } from '../components/FilterBar'
@@ -22,6 +23,7 @@ import {
   permissionStateToPayload,
   type PermissionState
 } from '../components/PermissionBuilder'
+import { Alert, Button, Card, Chip, Modal, Select, TextField } from '../components/ui'
 import './DashboardPage.css'
 
 interface DashboardPageProps {
@@ -129,8 +131,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
   const savePermissions = async () => {
     if (!editingRow) return
     await updatePermissions(editingRow.id, plugin, permissionStateToPayload(plugin, editPermissionState))
-    setEditingRow(null)
-    setModalType(null)
+    closeModal()
     showToast('权限已更新')
     void fetchList(page)
   }
@@ -139,8 +140,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
     if (!editingRow || !expiresInput) return
     const iso = new Date(expiresInput).toISOString()
     await updateExpiresAt(editingRow.id, iso)
-    setEditingRow(null)
-    setModalType(null)
+    closeModal()
     showToast('过期时间已更新')
     void fetchList(page)
   }
@@ -168,36 +168,31 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
 
   return (
     <div className="dashboard-page">
-      <header className="dashboard-top glass-card">
+      <Card className="dashboard-top">
         <div>
           <h1>激活码管理控制台</h1>
-          <p>霸气双品牌视觉 · 批量编排 · 权限预置</p>
+          <p>{formatPluginNamesLine()} · 批量编排 · 权限预置</p>
         </div>
         <div className="dashboard-top-actions">
-          <button className="btn btn-ghost" type="button" onClick={() => void fetchList(page)} disabled={loading}>
+          <Button variant="ghost" type="button" onClick={() => void fetchList(page)} disabled={loading}>
             刷新
-          </button>
-          <button className="btn btn-danger" type="button" onClick={onLogout}>退出</button>
+          </Button>
+          <Button variant="danger" type="button" onClick={onLogout}>退出</Button>
         </div>
-      </header>
+      </Card>
 
       <PluginTabs active={plugin} onChange={handlePluginChange} />
       <StatsBar total={total} used={used} unused={unused} />
 
-      <div className="sub-tabs">
+      <div className="sub-tabs" role="tablist" aria-label="控制台分区">
         {([
           ['list', '密钥列表'],
           ['generate', '快捷生成'],
           ['options', '系统选项']
         ] as const).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            className={`sub-tab ${subTab === id ? 'active' : ''}`}
-            onClick={() => setSubTab(id)}
-          >
+          <Chip key={id} active={subTab === id} onClick={() => setSubTab(id)}>
             {label}
-          </button>
+          </Chip>
         ))}
       </div>
 
@@ -205,24 +200,25 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         <section className="dashboard-section">
           <FilterBar filters={filters} onChange={setFilters} onSearch={() => void fetchList(1)} />
           <div className="list-toolbar">
-            <button className="btn btn-primary" type="button" onClick={() => void copySelected()}>
+            <Button type="button" onClick={() => void copySelected()}>
               复制 {selected.size} 个激活码
-            </button>
-            <button className="btn btn-danger" type="button" onClick={() => void handleBatchDelete()}>
+            </Button>
+            <Button variant="danger" type="button" onClick={() => void handleBatchDelete()}>
               批量删除
-            </button>
+            </Button>
             <div className="list-pagination">
-              <select className="input" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
-                {[5, 10, 20, 50].map((size) => (
-                  <option key={size} value={size}>{size} 条/页</option>
-                ))}
-              </select>
-              <button className="btn btn-ghost" type="button" disabled={page <= 1} onClick={() => void fetchList(page - 1)}>上一页</button>
+              <Select
+                className="list-page-size"
+                options={[5, 10, 20, 50].map((size) => ({ value: String(size), label: `${size} 条/页` }))}
+                value={String(pageSize)}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+              />
+              <Button variant="ghost" type="button" disabled={page <= 1} onClick={() => void fetchList(page - 1)}>上一页</Button>
               <span>{page} / {totalPages}</span>
-              <button className="btn btn-ghost" type="button" disabled={page >= totalPages} onClick={() => void fetchList(page + 1)}>下一页</button>
+              <Button variant="ghost" type="button" disabled={page >= totalPages} onClick={() => void fetchList(page + 1)}>下一页</Button>
             </div>
           </div>
-          {error ? <div className="dashboard-error">{error}</div> : null}
+          {error ? <Alert tone="error">{error}</Alert> : null}
           <KeyTable
             plugin={plugin}
             rows={rows}
@@ -260,45 +256,54 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
       ) : null}
 
       {subTab === 'options' ? (
-        <div className="options-panel glass-card">
+        <Card className="options-panel">
           <h2>系统选项</h2>
-          <label>
-            API 基址
-            <input className="input" value={apiBase} onChange={(e) => setApiBaseState(e.target.value)} />
-          </label>
-          <button className="btn btn-primary" type="button" onClick={saveOptions}>保存</button>
-        </div>
+          <TextField
+            label="API 基址"
+            value={apiBase}
+            onChange={(e) => setApiBaseState(e.target.value)}
+            mono
+          />
+          <Button type="button" onClick={saveOptions}>保存</Button>
+        </Card>
       ) : null}
 
-      {editingRow && modalType === 'expires' ? (
-        <div className="modal-backdrop">
-          <div className="modal glass-card">
-            <h3>编辑过期时间</h3>
-            <p className="mono">{editingRow.key}</p>
-            <input className="input" type="datetime-local" value={expiresInput} onChange={(e) => setExpiresInput(e.target.value)} />
-            <div className="modal-actions">
-              <button className="btn btn-ghost" type="button" onClick={closeModal}>取消</button>
-              <button className="btn btn-primary" type="button" onClick={() => void saveExpires()}>保存</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Modal
+        open={Boolean(editingRow && modalType === 'expires')}
+        title="编辑过期时间"
+        subtitle={editingRow?.key}
+        onClose={closeModal}
+        footer={(
+          <>
+            <Button variant="ghost" type="button" onClick={closeModal}>取消</Button>
+            <Button type="button" onClick={() => void saveExpires()}>保存</Button>
+          </>
+        )}
+      >
+        <TextField
+          type="datetime-local"
+          value={expiresInput}
+          onChange={(e) => setExpiresInput(e.target.value)}
+        />
+      </Modal>
 
-      {editingRow && modalType === 'permissions' ? (
-        <div className="modal-backdrop">
-          <div className="modal modal-wide glass-card">
-            <h3>编辑权限</h3>
-            <p className="mono">{editingRow.key}</p>
-            <PermissionBuilder plugin={plugin} state={editPermissionState} onChange={setEditPermissionState} />
-            <div className="modal-actions">
-              <button className="btn btn-ghost" type="button" onClick={closeModal}>取消</button>
-              <button className="btn btn-primary" type="button" onClick={() => void savePermissions()}>保存</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <Modal
+        open={Boolean(editingRow && modalType === 'permissions')}
+        title="编辑权限"
+        subtitle={editingRow?.key}
+        wide
+        onClose={closeModal}
+        footer={(
+          <>
+            <Button variant="ghost" type="button" onClick={closeModal}>取消</Button>
+            <Button type="button" onClick={() => void savePermissions()}>保存</Button>
+          </>
+        )}
+      >
+        <PermissionBuilder plugin={plugin} state={editPermissionState} onChange={setEditPermissionState} />
+      </Modal>
 
-      {toast ? <div className="toast">{toast}</div> : null}
+      {toast ? <div className="toast" role="status">{toast}</div> : null}
     </div>
   )
 }

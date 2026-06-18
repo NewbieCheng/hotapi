@@ -1,0 +1,10 @@
+.ui-card {
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+}
+
+.ui-card--glass {
+  background: var(--admin-surface);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}

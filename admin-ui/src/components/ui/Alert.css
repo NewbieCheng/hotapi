@@ -1,0 +1,42 @@
+.ui-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--admin-radius-sm);
+  font-size: 13px;
+}
+
+.ui-alert--error {
+  background: rgba(224, 82, 82, 0.12);
+  color: #fecaca;
+  border: 1px solid rgba(224, 82, 82, 0.28);
+}
+
+.ui-alert--success {
+  background: rgba(47, 143, 107, 0.14);
+  color: #bbf7d0;
+  border: 1px solid rgba(47, 143, 107, 0.28);
+}
+
+.ui-alert--info {
+  background: rgba(124, 111, 232, 0.12);
+  color: #ddd6fe;
+  border: 1px solid rgba(124, 111, 232, 0.28);
+}
+
+.ui-alert__close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.8;
+}
+
+.ui-alert__close:hover {
+  opacity: 1;
+}

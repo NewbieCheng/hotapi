@@ -1,3 +1,4 @@
+import { Card } from './ui'
 import './StatsBar.css'
 
 interface StatsBarProps {
@@ -9,18 +10,18 @@ interface StatsBarProps {
 export function StatsBar({ total, used, unused }: StatsBarProps) {
   return (
     <div className="stats-bar">
-      <div className="stat-card glass-card">
+      <Card className="stat-card">
         <p>激活码总数</p>
         <strong>{total}</strong>
-      </div>
-      <div className="stat-card glass-card">
+      </Card>
+      <Card className="stat-card">
         <p>已激活</p>
         <strong>{used}</strong>
-      </div>
-      <div className="stat-card glass-card">
+      </Card>
+      <Card className="stat-card">
         <p>待使用</p>
         <strong>{unused}</strong>
-      </div>
+      </Card>
     </div>
   )
 }
