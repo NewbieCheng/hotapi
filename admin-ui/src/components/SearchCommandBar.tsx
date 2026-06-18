@@ -65,7 +65,7 @@ export function SearchCommandBar({ filters, onChange, onSearch, activeStat }: Se
           }}
         />
         <Button variant="ghost" type="button" onClick={() => setAdvancedOpen((v) => !v)}>
-          {advancedOpen ? '收起' : '高级'}
+          {advancedOpen ? '收起' : '更多筛选'}
         </Button>
       </div>
 

@@ -11,11 +11,11 @@ import {
 } from '../api/activationAdmin'
 import type { ActivationKeyRow, PluginId } from '../types'
 import { EMPTY_FILTERS, filtersToSearchParams, type ListFilters } from '../types/filters'
-import { formatPluginNamesLine } from '../permissions/definitions'
+import { formatPluginNamesLine, PLUGINS } from '../permissions/definitions'
 import { useMediaQuery } from '../hooks/useMediaQuery'
 import { usePreferences } from '../hooks/usePreferences'
 import { useToast } from '../hooks/useToast'
-import { useViewMode } from '../hooks/useViewMode'
+import { useViewMode, type ViewModePreference } from '../hooks/useViewMode'
 import { PluginTabs } from '../components/PluginTabs'
 import { StatsBar } from '../components/StatsBar'
 import { SearchCommandBar } from '../components/SearchCommandBar'
@@ -73,9 +73,10 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
   const [createdKeys, setCreatedKeys] = useState<ActivationKeyRow[]>([])
   const [showCreateResult, setShowCreateResult] = useState(false)
   const [detailRow, setDetailRow] = useState<ActivationKeyRow | null>(null)
+  const [actionsOpen, setActionsOpen] = useState(false)
 
   const { message: toastMessage, tone: toastTone, showToast } = useToast()
-  const { preference, resolvedMode, setPreference } = useViewMode()
+  const { preference, resolvedMode, isMobile: viewModeMobile, setPreference } = useViewMode()
   const {
     pageSize,
     setPageSize,
@@ -230,14 +231,25 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
     void fetchList(1)
   }
 
+  const handleViewModeChange = (pref: ViewModePreference) => {
+    setPreference(pref)
+    setViewModePreference(pref)
+  }
+
+  const allPageSelected = rows.length > 0 && rows.every((row) => selected.has(row.id))
+
   const generatePrefs = loadGeneratePrefs(plugin)
 
   const listSection = (
     <section className="dashboard-section">
       <div className="command-bar-sticky">
-        <div className="command-bar-sticky__row">
-          <ViewModeToggle mode={resolvedMode} onChange={(mode) => setPreference(mode)} />
-        </div>
+        <ViewModeToggle
+          preference={preference}
+          resolvedMode={resolvedMode}
+          isMobile={isMobile || viewModeMobile}
+          totalHint={rows.length}
+          onChange={handleViewModeChange}
+        />
         <SearchCommandBar
           filters={filters}
           onChange={setFilters}
@@ -246,30 +258,74 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         />
       </div>
 
-      <div className="list-toolbar">
+      <div className={`list-toolbar${isMobile ? ' list-toolbar--mobile' : ''}`}>
         <span className="list-toolbar__hint">
-          {selected.size > 0 ? `已选当前页 ${selected.size} 条` : `${rows.length} 条`}
+          {selected.size > 0 ? `已选 ${selected.size} 条` : `共 ${total} 条`}
         </span>
-        <Button type="button" onClick={() => void copySelected()}>
-          复制 {selected.size} 个
-        </Button>
-        <Button variant="ghost" type="button" onClick={exportSelected}>
-          导出 TXT
-        </Button>
-        <Button variant="danger" type="button" onClick={() => void handleBatchDelete()}>
-          批量删除
-        </Button>
-        <div className="list-pagination">
-          <Select
-            className="list-page-size"
-            options={[5, 10, 20, 50].map((size) => ({ value: String(size), label: `${size} 条/页` }))}
-            value={String(pageSize)}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-          />
-          <Button variant="ghost" type="button" disabled={page <= 1 || loading} onClick={() => void fetchList(page - 1)}>上一页</Button>
-          <span>{page} / {totalPages}</span>
-          <Button variant="ghost" type="button" disabled={page >= totalPages || loading} onClick={() => void fetchList(page + 1)}>下一页</Button>
-        </div>
+
+        {isMobile ? (
+          <>
+            <label className="list-toolbar__select">
+              <input
+                type="checkbox"
+                checked={allPageSelected}
+                onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((row) => row.id)) : new Set())}
+              />
+              全选
+            </label>
+            <div className="list-toolbar__actions-menu">
+              <Button
+                variant="ghost"
+                type="button"
+                aria-expanded={actionsOpen}
+                onClick={() => setActionsOpen((v) => !v)}
+              >
+                选择操作 ▾
+              </Button>
+              {actionsOpen ? (
+                <div className="list-toolbar__dropdown" role="menu">
+                  <button type="button" role="menuitem" onClick={() => { setActionsOpen(false); void copySelected() }}>
+                    复制 {selected.size || ''} 个
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => { setActionsOpen(false); exportSelected() }}>
+                    导出 TXT
+                  </button>
+                  <button type="button" role="menuitem" className="list-toolbar__dropdown-danger" onClick={() => { setActionsOpen(false); void handleBatchDelete() }}>
+                    批量删除
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <div className="list-pagination list-pagination--compact">
+              <Button variant="ghost" type="button" disabled={page <= 1 || loading} onClick={() => void fetchList(page - 1)} aria-label="上一页">‹</Button>
+              <span className="list-pagination__label">{page} / {totalPages}</span>
+              <Button variant="ghost" type="button" disabled={page >= totalPages || loading} onClick={() => void fetchList(page + 1)} aria-label="下一页">›</Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <Button type="button" onClick={() => void copySelected()}>
+              复制 {selected.size} 个
+            </Button>
+            <Button variant="ghost" type="button" onClick={exportSelected}>
+              导出 TXT
+            </Button>
+            <Button variant="danger" type="button" onClick={() => void handleBatchDelete()}>
+              批量删除
+            </Button>
+            <div className="list-pagination">
+              <Select
+                className="list-page-size"
+                options={[5, 10, 20, 50].map((size) => ({ value: String(size), label: `${size} 条/页` }))}
+                value={String(pageSize)}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+              />
+              <Button variant="ghost" type="button" disabled={page <= 1 || loading} onClick={() => void fetchList(page - 1)}>上一页</Button>
+              <span>{page} / {totalPages}</span>
+              <Button variant="ghost" type="button" disabled={page >= totalPages || loading} onClick={() => void fetchList(page + 1)}>下一页</Button>
+            </div>
+          </>
+        )}
       </div>
 
       {error ? (
@@ -315,8 +371,13 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
       <Card className="dashboard-top">
         <div className="dashboard-top__band" aria-hidden />
         <div className="dashboard-top__content">
-          <div>
-            <h1>激活码管理控制台</h1>
+          <div className="dashboard-top__titles">
+            <div className="dashboard-top__heading-row">
+              <h1>激活码管理</h1>
+              {isMobile ? (
+                <span className="dashboard-top__plugin-pill">{PLUGINS[plugin].label}</span>
+              ) : null}
+            </div>
             <p>{formatPluginNamesLine()} · 批量编排 · 权限预置</p>
           </div>
           <div className="dashboard-top-actions">
@@ -378,8 +439,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
               onSaveApiBase={saveOptions}
               viewModePreference={preference}
               onViewModePreferenceChange={(pref) => {
-                setPreference(pref)
-                setViewModePreference(pref)
+                handleViewModeChange(pref)
               }}
               pageSize={pageSize}
               onPageSizeChange={setPageSize}

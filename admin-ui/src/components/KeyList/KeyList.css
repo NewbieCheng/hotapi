@@ -55,6 +55,13 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  min-height: 44px;
+  padding: 4px 0;
+}
+
+.key-card-list__select-all input {
+  width: 18px;
+  height: 18px;
 }
 
 .key-row-card {
@@ -71,7 +78,18 @@
 }
 
 .key-row-card__check {
-  padding-top: 2px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding-top: 0;
+  margin: -8px 0;
+}
+
+.key-row-card__check input {
+  width: 18px;
+  height: 18px;
 }
 
 .key-row-card__title {

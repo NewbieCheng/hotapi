@@ -201,13 +201,18 @@ Response: { e, i }
 ## 管理后台（`admin-ui/`）
 
 ```
-[FlowX] [采集助手] [知聊] [知销]     ← 插件主题 Tab（CSS 变量切换）
+[知发] [知源] [知聊] [知销]     ← 插件主题 Tab（CSS 变量切换）
   └─ [密钥列表] [快捷生成] [系统选项]
 ```
 
 - 构建：`npm run build:admin`（根 `package.json` 的 `vercel-build` 已串联）
+- 本地开发：`cd admin-ui && npm run dev`
 - 访问：`https://abc.no996ai.cn/admin/`（旧 `admin.html` 302 至 `/admin/`）
+- 设计上下文：[`PRODUCT.md`](PRODUCT.md) · [`DESIGN.md`](DESIGN.md)
+- Impeccable skill：`.cursor/skills/impeccable/`（UI 美化 / audit / adapt 命令）
 - 功能：列表筛选、三种生成模式、**一键生成 20 个**、多选**批量复制**、`count` 上限 100、知聊/知销权限 chip 编辑
+- 列表视图：**自动 / 表格 / 卡片** 三档分段控件，顶栏显示当前 resolved 模式
+- 移动端：BottomNav 三 Tab、列表操作折叠为「选择操作」、安全区 `viewport-fit=cover`
 - FlowX：完整功能权限 + 分发渠道
 - CJZS：平台 `ac` + 等级
 - 知聊 / 知销：功能 chip + 模板（全开/标准/基础）

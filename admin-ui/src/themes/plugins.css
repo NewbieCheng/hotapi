@@ -1,8 +1,8 @@
 [data-theme='flowx'] {
-  --admin-primary: #5b4fd4;
-  --admin-primary-2: #7c6fe8;
-  --admin-primary-glow: rgba(91, 79, 212, 0.18);
-  --admin-stat-total: #5b4fd4;
+  --admin-primary: #4f46a8;
+  --admin-primary-2: #5b52b8;
+  --admin-primary-glow: rgba(79, 70, 168, 0.16);
+  --admin-stat-total: #4f46a8;
 }
 
 [data-theme='cjzs'] {

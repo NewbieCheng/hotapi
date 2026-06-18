@@ -7,14 +7,17 @@
   --admin-border-strong: rgba(21, 24, 32, 0.16);
   --admin-paper: #fafbfc;
   --admin-text: #151820;
-  --admin-muted: #6b7280;
-  --admin-primary: #5b4fd4;
-  --admin-primary-2: #7c6fe8;
-  --admin-primary-glow: rgba(91, 79, 212, 0.18);
+  --admin-muted: #525866;
+  --admin-primary: #4f46a8;
+  --admin-primary-2: #5b52b8;
+  --admin-primary-glow: rgba(79, 70, 168, 0.16);
+  --admin-accent: var(--admin-primary);
+  --admin-accent-soft: color-mix(in srgb, var(--admin-primary) 12%, transparent);
+  --admin-surface-hover: var(--admin-surface-muted);
   --admin-danger: #dc2626;
   --admin-success: #059669;
   --admin-warning: #d97706;
-  --admin-stat-total: #4f46e5;
+  --admin-stat-total: #4f46a8;
   --admin-stat-used: #059669;
   --admin-stat-unused: #d97706;
   --admin-radius: 16px;
@@ -25,6 +28,10 @@
   --admin-bg: #f4f5f7;
   --admin-shadow: 0 1px 2px rgba(21, 24, 32, 0.04), 0 8px 24px rgba(21, 24, 32, 0.06);
   --admin-shadow-lg: 0 12px 40px rgba(21, 24, 32, 0.1);
+  --z-sticky: 15;
+  --z-nav: 50;
+  --z-sheet: 60;
+  --z-toast: 70;
 }
 
 * {
@@ -42,8 +49,8 @@ body {
   font-family: var(--admin-font);
   color: var(--admin-text);
   background:
-    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(21, 24, 32, 0.06), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 0% 100%, color-mix(in srgb, var(--admin-primary) 8%, transparent), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(21, 24, 32, 0.04), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, color-mix(in srgb, var(--admin-primary) 6%, transparent), transparent 50%),
     var(--admin-bg);
   -webkit-font-smoothing: antialiased;
 }

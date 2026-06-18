@@ -32,7 +32,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     <div className="login-page">
       <section className="login-hero">
         <div className="login-hero-inner">
-          <p className="login-kicker">ACTIVATION COMMAND CENTER</p>
+          <p className="login-kicker">四插件激活码统一编排</p>
           <h1>插件激活管理控制台</h1>
           <p className="login-subline">
             {formatPluginNamesLine()} — 统一密钥编排与权限下发

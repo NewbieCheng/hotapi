@@ -10,9 +10,9 @@ interface StatsBarProps {
 }
 
 const ITEMS = [
-  { key: 'total' as const, label: '激活码总数', tone: 'total' as const },
-  { key: 'used' as const, label: '已激活', tone: 'used' as const },
-  { key: 'unused' as const, label: '待使用', tone: 'unused' as const }
+  { key: 'total' as const, label: '激活码总数', shortLabel: '总数', tone: 'total' as const },
+  { key: 'used' as const, label: '已激活', shortLabel: '已用', tone: 'used' as const },
+  { key: 'unused' as const, label: '待使用', shortLabel: '待用', tone: 'unused' as const }
 ]
 
 export function StatsBar({ total, used, unused, activeKey, onFilter }: StatsBarProps) {
@@ -36,7 +36,7 @@ export function StatsBar({ total, used, unused, activeKey, onFilter }: StatsBarP
         >
           <span className="stat-card__icon" aria-hidden="true" />
           <div className="stat-card__body">
-            <p>{item.label}</p>
+            <p><span className="stat-card__label-full">{item.label}</span><span className="stat-card__label-short">{item.shortLabel}</span></p>
             <strong>{values[item.key]}</strong>
           </div>
         </Card>

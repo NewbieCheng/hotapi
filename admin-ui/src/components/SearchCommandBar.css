@@ -53,4 +53,16 @@
     flex-direction: column;
     align-items: stretch;
   }
+
+  .search-command-bar__chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .search-command-bar__chips::-webkit-scrollbar {
+    display: none;
+  }
 }

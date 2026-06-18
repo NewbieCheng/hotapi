@@ -12,7 +12,8 @@ const ORDER: PluginId[] = ['flowx', 'cjzs', 'zhiliao', 'zhixiao']
 
 export function PluginTabs({ active, onChange }: PluginTabsProps) {
   return (
-    <div className="plugin-tabs" role="tablist" aria-label="产品插件">
+    <div className="plugin-tabs-wrap">
+      <div className="plugin-tabs" role="tablist" aria-label="产品插件">
       {ORDER.map((id) => {
         const cfg = PLUGINS[id]
         const isActive = active === id
@@ -30,6 +31,7 @@ export function PluginTabs({ active, onChange }: PluginTabsProps) {
           </button>
         )
       })}
+      </div>
     </div>
   )
 }

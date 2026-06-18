@@ -46,12 +46,13 @@ export function PreferencesPanel({
 
       <section className="preferences-section">
         <h3>列表</h3>
+        <p className="preferences-hint">视图模式与列表页顶部分段控件同步；在此修改会立即生效。</p>
         <Select
           label="默认视图"
           options={[
             { value: 'auto', label: '自动（手机卡片 / 桌面表格）' },
-            { value: 'table', label: '表格' },
-            { value: 'card', label: '卡片' }
+            { value: 'table', label: '始终表格' },
+            { value: 'card', label: '始终卡片' }
           ]}
           value={viewModePreference}
           onChange={(e) => onViewModePreferenceChange(e.target.value as ViewModePreference)}
