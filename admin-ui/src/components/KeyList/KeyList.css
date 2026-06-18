@@ -38,7 +38,7 @@
 .key-card-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .key-card-list__toolbar {
@@ -65,10 +65,10 @@
 }
 
 .key-row-card {
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .key-row-card__head {

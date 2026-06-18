@@ -57,3 +57,25 @@
   color: var(--admin-muted);
   line-height: 1.4;
 }
+
+@media (max-width: 768px) {
+  .view-mode-toggle-wrap {
+    gap: 4px;
+  }
+
+  .view-mode-toggle__btn {
+    min-height: 36px;
+    padding: 6px 8px;
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  .view-mode-toggle__btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .view-mode-toggle__hint {
+    font-size: 11px;
+  }
+}

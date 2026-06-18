@@ -15,6 +15,7 @@ interface KeyCardViewProps {
   onEditExpires: (row: ActivationKeyRow) => void
   onDelete: (id: string) => void
   onOpenDetail: (row: ActivationKeyRow) => void
+  hideToolbar?: boolean
 }
 
 function KeyRowCard({
@@ -81,19 +82,22 @@ export function KeyCardView({
   onEditPermissions,
   onEditExpires,
   onDelete,
-  onOpenDetail
+  onOpenDetail,
+  hideToolbar = false
 }: KeyCardViewProps) {
   const allSelected = rows.length > 0 && rows.every((row) => selected.has(row.id))
 
   return (
     <div className="key-card-list">
-      <div className="key-card-list__toolbar">
-        <label className="key-card-list__select-all">
-          <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} />
-          全选当前页
-        </label>
-        <span className="key-card-list__count">{rows.length} 条</span>
-      </div>
+      {!hideToolbar ? (
+        <div className="key-card-list__toolbar">
+          <label className="key-card-list__select-all">
+            <input type="checkbox" checked={allSelected} onChange={(e) => onToggleAll(e.target.checked)} />
+            全选当前页
+          </label>
+          <span className="key-card-list__count">{rows.length} 条</span>
+        </div>
+      ) : null}
       {rows.map((row) => (
         <KeyRowCard
           key={row.id}

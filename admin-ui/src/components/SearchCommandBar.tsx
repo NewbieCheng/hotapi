@@ -9,6 +9,7 @@ interface SearchCommandBarProps {
   onChange: (next: ListFilters) => void
   onSearch: () => void
   activeStat?: 'total' | 'used' | 'unused' | null
+  compact?: boolean
 }
 
 const QUICK_CHIPS: { id: string; label: string; apply: (f: ListFilters) => ListFilters }[] = [
@@ -30,7 +31,7 @@ function isChipActive(filters: ListFilters, id: string): boolean {
   }
 }
 
-export function SearchCommandBar({ filters, onChange, onSearch, activeStat }: SearchCommandBarProps) {
+export function SearchCommandBar({ filters, onChange, onSearch, activeStat, compact = false }: SearchCommandBarProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const pills = getActiveFilterLabels(filters)
   const onSearchRef = useRef(onSearch)
@@ -53,7 +54,7 @@ export function SearchCommandBar({ filters, onChange, onSearch, activeStat }: Se
   }
 
   return (
-    <Card className="search-command-bar">
+    <Card className={`search-command-bar${compact ? ' search-command-bar--compact' : ''}`}>
       <div className="search-command-bar__main">
         <TextField
           className="search-command-bar__input"
@@ -69,16 +70,20 @@ export function SearchCommandBar({ filters, onChange, onSearch, activeStat }: Se
         </Button>
       </div>
 
-      <div className="search-command-bar__chips">
-        {QUICK_CHIPS.map((chip) => (
-          <Chip
-            key={chip.id}
-            active={isChipActive(filters, chip.id) || (chip.id === 'used' && activeStat === 'used') || (chip.id === 'unused' && activeStat === 'unused')}
-            onClick={() => toggleChip(chip)}
-          >
-            {chip.label}
-          </Chip>
-        ))}
+      <div className="search-command-bar__chips-wrap">
+        <div className="search-command-bar__chips">
+          {QUICK_CHIPS.map((chip) => (
+            <Chip
+              key={chip.id}
+              className={compact ? 'ui-chip--compact' : ''}
+              active={isChipActive(filters, chip.id) || (chip.id === 'used' && activeStat === 'used') || (chip.id === 'unused' && activeStat === 'unused')}
+              onClick={() => toggleChip(chip)}
+            >
+              {chip.label}
+            </Chip>
+          ))}
+        </div>
+        {compact ? <p className="search-command-bar__scroll-hint">左右滑动查看更多筛选</p> : null}
       </div>
 
       {advancedOpen ? (

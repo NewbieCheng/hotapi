@@ -17,6 +17,7 @@ interface KeyListProps {
   onEditExpires: (row: ActivationKeyRow) => void
   onDelete: (id: string) => void
   onOpenDetail: (row: ActivationKeyRow) => void
+  hideCardToolbar?: boolean
 }
 
 export function KeyList({
@@ -30,7 +31,8 @@ export function KeyList({
   onEditPermissions,
   onEditExpires,
   onDelete,
-  onOpenDetail
+  onOpenDetail,
+  hideCardToolbar = false
 }: KeyListProps) {
   const shared = {
     plugin,
@@ -46,7 +48,7 @@ export function KeyList({
   }
 
   if (viewMode === 'card') {
-    return <KeyCardView {...shared} />
+    return <KeyCardView {...shared} hideToolbar={hideCardToolbar} />
   }
   return <KeyTableView {...shared} />
 }

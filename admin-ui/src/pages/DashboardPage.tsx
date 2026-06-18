@@ -53,8 +53,21 @@ function exportTxt(keys: string[], filename = 'activation-keys.txt') {
 }
 
 export function DashboardPage({ onLogout }: DashboardPageProps) {
-  const [plugin, setPlugin] = useState<PluginId>('flowx')
-  const [subTab, setSubTab] = useState<NavTab>('list')
+  const {
+    pageSize,
+    setPageSize,
+    setViewModePreference,
+    getActivePlugin,
+    getNavTab,
+    setActivePlugin,
+    setNavTab,
+    loadGeneratePrefs,
+    saveGeneratePrefs,
+    clearGeneratePrefs
+  } = usePreferences()
+
+  const [plugin, setPlugin] = useState<PluginId>(() => getActivePlugin())
+  const [subTab, setSubTab] = useState<NavTab>(() => getNavTab())
   const [rows, setRows] = useState<ActivationKeyRow[]>([])
   const [total, setTotal] = useState(0)
   const [used, setUsed] = useState(0)
@@ -77,14 +90,6 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
 
   const { message: toastMessage, tone: toastTone, showToast } = useToast()
   const { preference, resolvedMode, isMobile: viewModeMobile, setPreference } = useViewMode()
-  const {
-    pageSize,
-    setPageSize,
-    setViewModePreference,
-    loadGeneratePrefs,
-    saveGeneratePrefs,
-    clearGeneratePrefs
-  } = usePreferences()
   const isMobile = useMediaQuery('(max-width: 768px)')
   const isWide = useMediaQuery('(min-width: 1280px)')
 
@@ -142,9 +147,14 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
 
   const handlePluginChange = (next: PluginId) => {
     setPlugin(next)
+    setActivePlugin(next)
     setPage(1)
-    setSubTab('list')
     setActiveStat(null)
+  }
+
+  const handleSubTabChange = (tab: NavTab) => {
+    setSubTab(tab)
+    setNavTab(tab)
   }
 
   const handleStatFilter = (key: 'total' | 'used' | 'unused') => {
@@ -247,7 +257,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
           preference={preference}
           resolvedMode={resolvedMode}
           isMobile={isMobile || viewModeMobile}
-          totalHint={rows.length}
+          totalHint={isMobile ? undefined : rows.length}
           onChange={handleViewModeChange}
         />
         <SearchCommandBar
@@ -255,6 +265,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
           onChange={setFilters}
           onSearch={() => void fetchList(1)}
           activeStat={activeStat}
+          compact={isMobile}
         />
       </div>
 
@@ -337,7 +348,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
 
       {loading ? <ListSkeleton rows={pageSize > 10 ? 8 : pageSize} /> : null}
       {!loading && !rows.length ? (
-        <EmptyState onAction={() => setSubTab('generate')} />
+        <EmptyState onAction={() => handleSubTabChange('generate')} />
       ) : null}
       {!loading && rows.length ? (
         <KeyList
@@ -345,6 +356,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
           viewMode={resolvedMode}
           rows={rows}
           selected={selected}
+          hideCardToolbar={isMobile}
           onToggle={(id) => {
             setSelected((prev) => {
               const next = new Set(prev)
@@ -391,7 +403,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         </div>
       </Card>
 
-      <PluginTabs active={plugin} onChange={handlePluginChange} />
+      <PluginTabs active={plugin} onChange={handlePluginChange} compact={isMobile} />
 
       {loading && !rows.length ? <StatsSkeleton /> : (
         <StatsBar
@@ -410,7 +422,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
             ...(!isWide ? [['generate', '快捷生成']] as const : []),
             ['options', '系统选项']
           ] as const).map(([id, label]) => (
-            <Chip key={id} active={subTab === id} onClick={() => setSubTab(id as NavTab)}>
+            <Chip key={id} active={subTab === id} onClick={() => handleSubTabChange(id as NavTab)}>
               {label}
             </Chip>
           ))}
@@ -466,7 +478,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         ) : null}
       </div>
 
-      {isMobile ? <BottomNav active={subTab} onChange={setSubTab} /> : null}
+      {isMobile ? <BottomNav active={subTab} onChange={handleSubTabChange} /> : null}
 
       <CreateResultDrawer
         open={showCreateResult}
@@ -476,7 +488,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         onCopySelected={(keys) => void copyText(keys.join('\n'))}
         onGoToList={() => {
           setShowCreateResult(false)
-          setSubTab('list')
+          handleSubTabChange('list')
         }}
         onContinue={() => setShowCreateResult(false)}
       />

@@ -4,6 +4,21 @@ import type { ViewModePreference } from './useViewMode'
 
 const PAGE_SIZE_KEY = 'admin_prefs_page_size'
 const VIEW_MODE_KEY = 'admin_prefs_view_mode'
+const ACTIVE_PLUGIN_KEY = 'admin_prefs_active_plugin'
+const NAV_TAB_KEY = 'admin_prefs_nav_tab'
+
+const PLUGIN_IDS: PluginId[] = ['flowx', 'cjzs', 'zhiliao', 'zhixiao']
+export type NavTabPreference = 'list' | 'generate' | 'options'
+
+function readActivePlugin(): PluginId {
+  const raw = localStorage.getItem(ACTIVE_PLUGIN_KEY)
+  return PLUGIN_IDS.includes(raw as PluginId) ? (raw as PluginId) : 'flowx'
+}
+
+function readNavTab(): NavTabPreference {
+  const raw = localStorage.getItem(NAV_TAB_KEY)
+  return raw === 'list' || raw === 'generate' || raw === 'options' ? raw : 'list'
+}
 
 export interface GeneratePrefs {
   duration: number
@@ -51,11 +66,23 @@ export function usePreferences() {
     localStorage.removeItem(`admin_prefs_generate_${plugin}`)
   }, [])
 
+  const setActivePlugin = useCallback((plugin: PluginId) => {
+    localStorage.setItem(ACTIVE_PLUGIN_KEY, plugin)
+  }, [])
+
+  const setNavTab = useCallback((tab: NavTabPreference) => {
+    localStorage.setItem(NAV_TAB_KEY, tab)
+  }, [])
+
   return {
     pageSize,
     setPageSize,
     setViewModePreference,
     getViewModePreference,
+    getActivePlugin: readActivePlugin,
+    getNavTab: readNavTab,
+    setActivePlugin,
+    setNavTab,
     loadGeneratePrefs,
     saveGeneratePrefs,
     clearGeneratePrefs
