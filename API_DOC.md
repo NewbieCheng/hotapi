@@ -229,18 +229,23 @@ export interface XhsSearchRequest {
 | 知聊 | `POST /api/activation_zhiliao?action=activate\|verify` | `ZHILIAO-` |
 | 知销 | `POST /api/activation_zhixiao?action=activate\|verify` | `ZHIXIAO-` |
 
-- **请求体**: `{ "key": "ZHILIAO-13800138000", "device_id": "..." }`
+- **请求体**: `{ "key": "ZHILIAO-13800138000", "device_id": "...", "include_permissions": true }`
 - **响应**: 加密 JSON `{ "e", "i" }`（盐值与 FlowX `activation_v2` 相同）
-- **解密后 `data`**: `{ key, expires_at, is_used, is_licensed, is_expired, duration_days }`
+- **解密后 `data`**: `{ key, expires_at, is_used, is_licensed, is_expired, duration_days, p? }`
+- **`include_permissions`**: 默认 `true`（环境变量 `ACTIVATION_DESKTOP_INCLUDE_PERMISSIONS_DEFAULT` 可关）
+- **`p`**: 加密下发的功能权限对象；库中 `permissions` 为 `null` 时不返回 `p`（客户端视为全功能）
+- **知聊 `p` 字段**: `ch` 聊天 · `ex` 导出 · `an` 分析 · `ar` 年度报告 · `dr` 双人报告 · `fp` 足迹 · `sn` 朋友圈 · `sop` 聊天整理 · `ai` AI 见解 · `api` 本地 HTTP API · `bk` 备份；可选 `level`: `plus` | `pro`
+- **知销 `p` 字段**: `wb` 工作台 · `ct` 会话 · `pm` 发朋友圈 · `ag` 角色 · `kb` 知识库 · `mem` 记忆 · `src` 接入 · `rt` 实时建议 · `aapi` Agent API；可选 `level`: `plus` | `pro`
 
 管理员可通过 `phone` / `phones` / `key` 创建激活码，见下方「创建激活码」。
 
 ---
 
-## 管理端 API（admin.html 专用）
+## 管理端 API（React Admin `/admin/`）
 
 **基址**: `https://abc.no996ai.cn/api/activation`  
-**鉴权**: 请求头 `x-admin-auth: <ADMIN_PASSWORD>`
+**鉴权**: 请求头 `x-admin-auth: <ADMIN_PASSWORD>`  
+**前端**: `admin-ui/`（Vite + React SPA，`npm run build:admin`）
 
 ### 登录
 
@@ -308,6 +313,9 @@ Body: {
 - `plugin=zhiliao` 强制 prefix 为 `ZHILIAO`
 - `plugin=zhixiao` 强制 prefix 为 `ZHIXIAO`
 - `plugin=flowx` 拒绝 `CJZS` / `ZHILIAO` / `ZHIXIAO` 前缀
+- 随机批量 `count` 上限 **100**；管理端提供「一键生成 20 个」
+- 知聊 / 知销 `permissions` 示例：`{ "ch": true, "ex": true, "sop": false, "level": "plus" }` 或 `{ "wb": true, "ct": true, "rt": false }`
+- `permissions: null` 或未传 → 全功能开放（兼容旧码）
 - 重复 `key` 返回 HTTP `409`
 
 ### 更新过期时间（精确 ISO8601）
@@ -339,7 +347,7 @@ Body: {
 
 | action | 方法 | Body |
 |--------|------|------|
-| `update_permissions` | POST | `{ id, permissions, plugin? }`（CJZS 的 `permissions` 含 `ac` + `level`） |
+| `update_permissions` | POST | `{ id, permissions, plugin? }`（CJZS：`ac`+`level`；知聊/知销：短 key boolean；`permissions: null` 清空为全开） |
 | `update_level` | POST | `{ id, level, plugin: "cjzs" }` |
 | `batch_delete` | POST | `{ ids: [] }` |
 | `delete` | DELETE | `?id=` |

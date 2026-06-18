@@ -1,0 +1,156 @@
+.dashboard-page {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dashboard-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 22px 24px;
+}
+
+.dashboard-top h1 {
+  margin: 0 0 4px;
+  font-size: 28px;
+  font-family: var(--admin-display);
+}
+
+.dashboard-top p {
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.dashboard-top-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sub-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.sub-tab {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--admin-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--admin-text);
+  cursor: pointer;
+}
+
+.sub-tab.active {
+  border-color: color-mix(in srgb, var(--admin-primary) 70%, white);
+  background: color-mix(in srgb, var(--admin-primary) 16%, transparent);
+}
+
+.dashboard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.list-pagination {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-pagination .input {
+  width: auto;
+}
+
+.dashboard-error {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+}
+
+.options-panel {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 520px;
+}
+
+.options-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--admin-muted);
+  font-size: 13px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  width: min(520px, 100%);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-wide {
+  width: min(760px, 100%);
+}
+
+.modal h3 {
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.92);
+  color: #052e1d;
+  font-weight: 600;
+  z-index: 60;
+}
+
+@media (max-width: 720px) {
+  .dashboard-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-pagination {
+    margin-left: 0;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}

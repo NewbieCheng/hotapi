@@ -1,0 +1,41 @@
+.key-table-wrap {
+  overflow: auto;
+}
+
+.key-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 960px;
+}
+
+.key-table th,
+.key-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.key-table th {
+  color: var(--admin-muted);
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.key-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.key-actions .btn {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.empty-row {
+  text-align: center;
+  color: var(--admin-muted);
+  padding: 32px !important;
+}

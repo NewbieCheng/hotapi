@@ -1,0 +1,91 @@
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+}
+
+.login-hero {
+  display: flex;
+  align-items: center;
+  padding: 64px;
+  background:
+    linear-gradient(135deg, rgba(99, 102, 241, 0.18), transparent 55%),
+    linear-gradient(225deg, rgba(34, 211, 238, 0.12), transparent 50%);
+}
+
+.login-hero-inner {
+  max-width: 520px;
+}
+
+.login-kicker {
+  letter-spacing: 0.24em;
+  font-size: 11px;
+  color: var(--admin-muted);
+  margin: 0 0 16px;
+}
+
+.login-hero h1 {
+  margin: 0 0 12px;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.1;
+  font-family: var(--admin-display);
+}
+
+.login-hero p:last-child {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.login-form {
+  align-self: center;
+  justify-self: center;
+  width: min(420px, calc(100% - 48px));
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-form h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.login-form > p {
+  margin: 0 0 8px;
+  color: var(--admin-muted);
+  font-size: 14px;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--admin-muted);
+}
+
+.login-error {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-hero {
+    padding: 40px 24px 0;
+    min-height: auto;
+  }
+
+  .login-form {
+    margin: 24px auto 40px;
+  }
+}

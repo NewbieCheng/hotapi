@@ -4,10 +4,14 @@ import {
   setCors,
   encryptPayload,
   checkRateLimit,
+  parseBooleanFlag,
   sanitizeDesktopActivationData
 } from './_activation_core.js';
 
 dotenv.config();
+
+const INCLUDE_PERMISSIONS_DEFAULT =
+  String(process.env.ACTIVATION_DESKTOP_INCLUDE_PERMISSIONS_DEFAULT || 'true').toLowerCase() === 'true';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -50,7 +54,8 @@ export function createDesktopActivationHandler(options) {
         return res.status(429).json({ error: '请求过于频繁，请 3 分钟后再试' });
       }
 
-      const { key, device_id } = body;
+      const { key, device_id, include_permissions } = body;
+      const includePermissions = parseBooleanFlag(include_permissions, INCLUDE_PERMISSIONS_DEFAULT);
       const prefixCheck = assertKey(key);
       if (!prefixCheck.ok) {
         return res.status(200).json(encryptPayload({ success: false, error: prefixCheck.error }, device_id));
@@ -81,7 +86,7 @@ export function createDesktopActivationHandler(options) {
           encryptPayload(
             {
               success: true,
-              data: sanitizeDesktopActivationData(data)
+              data: sanitizeDesktopActivationData(data, includePermissions)
             },
             device_id
           )
@@ -108,7 +113,7 @@ export function createDesktopActivationHandler(options) {
               {
                 success: true,
                 message: '设备已激活',
-                data: sanitizeDesktopActivationData(keyData)
+                data: sanitizeDesktopActivationData(keyData, includePermissions)
               },
               device_id
             )
@@ -144,7 +149,7 @@ export function createDesktopActivationHandler(options) {
             {
               success: true,
               message: '激活成功',
-              data: sanitizeDesktopActivationData(data)
+              data: sanitizeDesktopActivationData(data, includePermissions)
             },
             device_id
           )

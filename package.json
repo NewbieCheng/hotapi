@@ -8,6 +8,8 @@
   "main": "index.js",
   "scripts": {
     "build": "node index.js",
+    "build:admin": "cd admin-ui && npm ci && npm run build",
+    "vercel-build": "npm run build:admin",
     "build:vercel": "vercel"
   },
   "dependencies": {

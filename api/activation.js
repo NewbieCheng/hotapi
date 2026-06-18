@@ -11,7 +11,9 @@ import {
   assertZhiliaoKey,
   assertZhixiaoKey,
   buildPhoneActivationKey,
-  normalizeCjzsLevel
+  normalizeCjzsLevel,
+  normalizeZhiliaoPermissions,
+  normalizeZhixiaoPermissions
 } from './_activation_core.js';
 
 dotenv.config();
@@ -128,6 +130,16 @@ function normalizeCjzsPermissions(input) {
   return { ac, level };
 }
 
+function normalizePluginPermissions(plugin, permissions) {
+  if (plugin === 'cjzs') return normalizeCjzsPermissions(permissions);
+  if (plugin === 'flowx') return normalizePermissions(permissions);
+  if (plugin === 'zhiliao') return normalizeZhiliaoPermissions(permissions);
+  if (plugin === 'zhixiao') return normalizeZhixiaoPermissions(permissions);
+  return null;
+}
+
+const MAX_BATCH_COUNT = 100;
+
 function applyPluginFilter(query, plugin) {
   if (plugin === 'cjzs') return query.ilike('key', `${CJZS_PREFIX}%`);
   if (plugin === 'zhiliao') return query.ilike('key', `${ZHILIAO_PREFIX}%`);
@@ -219,7 +231,7 @@ function collectKeysToInsert(body, resolvedPrefix, plugin) {
     return keysToInsert;
   }
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < Math.min(Math.max(1, Number(count) || 1), MAX_BATCH_COUNT); i++) {
     keysToInsert.push({
       key: generateRandomKey(resolvedPrefix),
       duration_days: body.duration_days,
@@ -341,12 +353,7 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: prefixResult.error });
         }
         const resolvedPrefix = prefixResult.prefix;
-        const normalizedPermissions =
-          plugin === 'cjzs'
-            ? normalizeCjzsPermissions(permissions)
-            : plugin === 'flowx'
-              ? normalizePermissions(permissions)
-              : null;
+        const normalizedPermissions = normalizePluginPermissions(plugin, permissions);
 
         let keysToInsert = [];
         try {
@@ -394,12 +401,12 @@ export default async function handler(req, res) {
       if (action === "update_permissions") {
         const { id, permissions, plugin } = body;
         if (!id) return res.status(400).json({ error: "缺少 id" });
-        const normalizedPermissions =
-          plugin === 'cjzs'
-            ? normalizeCjzsPermissions(permissions)
-            : normalizePermissions(permissions);
-        if (!normalizedPermissions) {
-          return res.status(400).json({ error: "permissions 必须是合法 JSON 对象" });
+        let normalizedPermissions = null;
+        if (permissions !== null && permissions !== undefined && permissions !== '') {
+          normalizedPermissions = normalizePluginPermissions(plugin, permissions);
+          if (!normalizedPermissions) {
+            return res.status(400).json({ error: "permissions 必须是合法 JSON 对象" });
+          }
         }
         const { data, error } = await supabase
           .from('activation_keys')

@@ -167,10 +167,16 @@ Response: { e, i }
 ```
 POST /api/activation_zhiliao?action=activate|verify
 POST /api/activation_zhixiao?action=activate|verify
-Body: { key, device_id }
+Body: { key, device_id, include_permissions? }
 Response: { e, i }
-解密后含 data: { key, expires_at, is_licensed, is_expired, ... }
+解密后含 data: { key, expires_at, is_licensed, is_expired, p?, ... }
 ```
+
+- `include_permissions` 默认 `true`（`ACTIVATION_DESKTOP_INCLUDE_PERMISSIONS_DEFAULT`）
+- `p` 为加密下发的功能权限；库中 `permissions` 为 `null` 时不返回（全功能）
+- 知聊 keys：`ch,ex,an,ar,dr,fp,sn,sop,ai,api,bk`
+- 知销 keys：`wb,ct,pm,ag,kb,mem,src,rt,aapi`
+- 客户端当前仅持久化 `permissions`，**不做功能门禁**
 
 激活码格式：`ZHILIAO-13800138000` / `ZHIXIAO-13800138000`（前缀 + 11 位手机号）或管理员自定义完整码。
 
@@ -187,25 +193,24 @@ Response: { e, i }
 | `ADMIN_PASSWORD` | admin.html 管理密钥 |
 | `REDIS_URL` | 限流 / 缓存（可选） |
 | `ACTIVATION_CJZS_INCLUDE_PERMISSIONS_DEFAULT` | CJZS 默认是否下发权限 |
-| `ACTIVATION_V2_INCLUDE_PERMISSIONS_DEFAULT` | FlowX 默认是否下发权限 |
+| `ACTIVATION_DESKTOP_INCLUDE_PERMISSIONS_DEFAULT` | 知聊/知销 默认是否下发 `p` |
 | R2 相关 | FlowX 版本更新（`activation_v2` check_update） |
 
 ---
 
-## admin.html 结构
+## 管理后台（`admin-ui/`）
 
 ```
-[FlowX] [采集助手] [知聊] [知销] [系统选项]     ← 顶层插件页签
-  └─ [激活码库] [快捷生成] [选项]  ← 子页签（各插件）
+[FlowX] [采集助手] [知聊] [知销]     ← 插件主题 Tab（CSS 变量切换）
+  └─ [密钥列表] [快捷生成] [系统选项]
 ```
 
+- 构建：`npm run build:admin`（根 `package.json` 的 `vercel-build` 已串联）
+- 访问：`https://abc.no996ai.cn/admin/`（旧 `admin.html` 302 至 `/admin/`）
+- 功能：列表筛选、三种生成模式、**一键生成 20 个**、多选**批量复制**、`count` 上限 100、知聊/知销权限 chip 编辑
 - FlowX：完整功能权限 + 分发渠道
-- CJZS：仅平台 `ac` chip
-- 知聊 / 知销：会员周期 + 随机 / 自定义 / 手机号三种生成方式
-- 过期时间：完整 ISO 展示 + 弹窗精确编辑
-- 偏好存 `localStorage`（`admin_prefs_flowx` / `admin_prefs_cjzs` / `admin_prefs_system`）
-
-访问：`https://abc.no996ai.cn/admin`
+- CJZS：平台 `ac` + 等级
+- 知聊 / 知销：功能 chip + 模板（全开/标准/基础）
 
 ---
 
@@ -213,7 +218,7 @@ Response: { e, i }
 
 | 目标 | 改哪里 |
 |------|--------|
-| 管理后台 UI | `admin.html` |
+| 管理后台 UI | `admin-ui/`（React SPA） |
 | 管理端接口 / 列表筛选 / 续期 | `api/activation.js` |
 | FlowX 客户端激活逻辑 | `api/activation_v2.js` + `my-new-plugin` |
 | CJZS 客户端激活逻辑 | `api/activation_cjzs.js` + `03d-cjzs-activation.js` |

@@ -8,6 +8,9 @@ export const ZHIXIAO_PREFIX = 'ZHIXIAO-';
 
 export const DESKTOP_PREFIXES = [ZHILIAO_PREFIX, ZHIXIAO_PREFIX];
 
+export const ZHILIAO_PERMISSION_KEYS = ['ch', 'ex', 'an', 'ar', 'dr', 'fp', 'sn', 'sop', 'ai', 'api', 'bk'];
+export const ZHIXIAO_PERMISSION_KEYS = ['wb', 'ct', 'pm', 'ag', 'kb', 'mem', 'src', 'rt', 'aapi'];
+
 export const DEFAULT_CJZS_VIPS = [
   'xiaohongshu',
   'douyin',
@@ -154,10 +157,79 @@ export function buildPhoneActivationKey(prefix, phone) {
   return { ok: true, value: `${resolvedPrefix}-${mobile.value}` };
 }
 
-export function sanitizeDesktopActivationData(row) {
+function parsePermissionsInput(input) {
+  if (!input) return null;
+  if (typeof input === 'string') {
+    try {
+      const parsed = JSON.parse(input);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof input === 'object' && !Array.isArray(input)) return input;
+  return null;
+}
+
+function toPermissionBool(value, fallback = true) {
+  if (typeof value === 'boolean') return value;
+  if (value === 0 || value === '0' || value === 'false') return false;
+  if (value === 1 || value === '1' || value === 'true') return true;
+  return fallback;
+}
+
+export function normalizeDesktopLevel(raw) {
+  const s = String(raw ?? '').trim().toLowerCase();
+  if (s === 'pro' || s === 'svip') return 'pro';
+  return 'plus';
+}
+
+export function normalizeZhiliaoPermissions(input) {
+  const raw = parsePermissionsInput(input);
+  if (!raw) return null;
+  const payload = raw.p && typeof raw.p === 'object' ? { ...raw.p, ...raw } : raw;
+  const result = {};
+  ZHILIAO_PERMISSION_KEYS.forEach((key) => {
+    result[key] = toPermissionBool(payload[key], true);
+  });
+  if (payload.level != null && payload.level !== '') {
+    result.level = normalizeDesktopLevel(payload.level);
+  }
+  return result;
+}
+
+export function normalizeZhixiaoPermissions(input) {
+  const raw = parsePermissionsInput(input);
+  if (!raw) return null;
+  const payload = raw.p && typeof raw.p === 'object' ? { ...raw.p, ...raw } : raw;
+  const result = {};
+  ZHIXIAO_PERMISSION_KEYS.forEach((key) => {
+    result[key] = toPermissionBool(payload[key], true);
+  });
+  if (payload.level != null && payload.level !== '') {
+    result.level = normalizeDesktopLevel(payload.level);
+  }
+  return result;
+}
+
+function buildDesktopPermissionsPayload(rawPerm, key) {
+  if (!rawPerm || typeof rawPerm !== 'object' || Array.isArray(rawPerm)) return null;
+  const upper = String(key || '').toUpperCase();
+  const keys = upper.startsWith(ZHIXIAO_PREFIX) ? ZHIXIAO_PERMISSION_KEYS : ZHILIAO_PERMISSION_KEYS;
+  const p = {};
+  keys.forEach((permKey) => {
+    p[permKey] = toPermissionBool(rawPerm[permKey], true);
+  });
+  if (rawPerm.level != null && rawPerm.level !== '') {
+    p.level = normalizeDesktopLevel(rawPerm.level);
+  }
+  return p;
+}
+
+export function sanitizeDesktopActivationData(row, includePermissions = false) {
   if (!row || typeof row !== 'object') return row;
   const expired = row.expires_at && new Date(row.expires_at).getTime() < Date.now();
-  return {
+  const base = {
     id: row.id,
     key: row.key,
     duration_days: row.duration_days,
@@ -169,6 +241,11 @@ export function sanitizeDesktopActivationData(row) {
     is_expired: Boolean(expired),
     is_licensed: Boolean(row.is_used && !expired)
   };
+  if (includePermissions) {
+    const p = buildDesktopPermissionsPayload(row.permissions, row.key);
+    if (p) base.p = p;
+  }
+  return base;
 }
 
 export function normalizeCjzsLevel(raw) {

@@ -30,6 +30,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "admin-ui/dist/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "admin.html",
       "use": "@vercel/static"
     },
@@ -104,7 +108,19 @@
       }
     },
     {
-      "src": "/admin",
+      "src": "/admin$",
+      "dest": "/admin-ui/dist/index.html"
+    },
+    {
+      "src": "/admin/assets/(.*)",
+      "dest": "/admin-ui/dist/assets/$1"
+    },
+    {
+      "src": "/admin/(.*)",
+      "dest": "/admin-ui/dist/index.html"
+    },
+    {
+      "src": "/admin.html",
       "dest": "/admin.html"
     },
     {
