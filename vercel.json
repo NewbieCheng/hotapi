@@ -30,6 +30,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/skill_activation.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "admin-ui/dist/**",
       "use": "@vercel/static"
     },
@@ -105,6 +109,17 @@
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET,OPTIONS,PATCH,DELETE,POST,PUT",
         "Access-Control-Allow-Headers": "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+      }
+    },
+    {
+      "src": "/api/skill_activation",
+      "dest": "/api/skill_activation.js",
+      "headers": {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
+        "Access-Control-Allow-Headers": "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Admin-Auth",
+        "Cache-Control": "no-store"
       }
     },
     {

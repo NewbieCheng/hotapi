@@ -26,6 +26,7 @@ import { CreateResultDrawer } from '../components/CreateResultDrawer'
 import { KeyDetailSheet } from '../components/KeyDetailSheet'
 import { BottomNav, type NavTab } from '../components/BottomNav'
 import { PreferencesPanel } from '../components/PreferencesPanel'
+import { SkillActivationPage } from './SkillActivationPage'
 import {
   PermissionBuilder,
   permissionStateFromRow,
@@ -87,6 +88,7 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
   const [showCreateResult, setShowCreateResult] = useState(false)
   const [detailRow, setDetailRow] = useState<ActivationKeyRow | null>(null)
   const [actionsOpen, setActionsOpen] = useState(false)
+  const [workspaceMode, setWorkspaceMode] = useState<'software' | 'skill'>('software')
 
   const { message: toastMessage, tone: toastTone, showToast } = useToast()
   const { preference, resolvedMode, isMobile: viewModeMobile, setPreference } = useViewMode()
@@ -385,17 +387,23 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         <div className="dashboard-top__content">
           <div className="dashboard-top__titles">
             <div className="dashboard-top__heading-row">
-              <h1>激活码管理</h1>
-              {isMobile ? (
+              <h1>{workspaceMode === 'software' ? '软件激活码管理' : 'Skill 授权中心'}</h1>
+              {isMobile && workspaceMode === 'software' ? (
                 <span className="dashboard-top__plugin-pill">{PLUGINS[plugin].label}</span>
               ) : null}
             </div>
-            <p>{formatPluginNamesLine()} · 批量编排 · 权限预置</p>
+            <p>
+              {workspaceMode === 'software'
+                ? `${formatPluginNamesLine()} · 批量编排 · 权限预置`
+                : '客户设备绑定 · 批量签发 · Skill 打包发布'}
+            </p>
           </div>
           <div className="dashboard-top-actions">
-            <Button variant="ghost" type="button" onClick={() => void fetchList(page)} disabled={loading}>
-              刷新
-            </Button>
+            {workspaceMode === 'software' ? (
+              <Button variant="ghost" type="button" onClick={() => void fetchList(page)} disabled={loading}>
+                刷新
+              </Button>
+            ) : null}
             {!isMobile ? (
               <Button variant="danger" type="button" onClick={onLogout}>退出</Button>
             ) : null}
@@ -403,17 +411,42 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         </div>
       </Card>
 
-      <PluginTabs active={plugin} onChange={handlePluginChange} compact={isMobile} />
+      <div className="workspace-switch" role="tablist" aria-label="激活码类型">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={workspaceMode === 'software'}
+          className={workspaceMode === 'software' ? 'workspace-switch__item workspace-switch__item--active' : 'workspace-switch__item'}
+          onClick={() => setWorkspaceMode('software')}
+        >
+          <span>软件激活码</span>
+          <small>原有四款软件</small>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={workspaceMode === 'skill'}
+          className={workspaceMode === 'skill' ? 'workspace-switch__item workspace-switch__item--active' : 'workspace-switch__item'}
+          onClick={() => setWorkspaceMode('skill')}
+        >
+          <span>Skill 激活器</span>
+          <small>机器码换授权码</small>
+        </button>
+      </div>
 
-      {loading && !rows.length ? <StatsSkeleton /> : (
-        <StatsBar
-          total={total}
-          used={used}
-          unused={unused}
-          activeKey={activeStat}
-          onFilter={handleStatFilter}
-        />
-      )}
+      {workspaceMode === 'skill' ? <SkillActivationPage /> : (
+        <>
+          <PluginTabs active={plugin} onChange={handlePluginChange} compact={isMobile} />
+
+          {loading && !rows.length ? <StatsSkeleton /> : (
+            <StatsBar
+              total={total}
+              used={used}
+              unused={unused}
+              activeKey={activeStat}
+              onFilter={handleStatFilter}
+            />
+          )}
 
       {!isMobile ? (
         <div className="sub-tabs" role="tablist" aria-label="控制台分区">
@@ -539,7 +572,9 @@ export function DashboardPage({ onLogout }: DashboardPageProps) {
         <PermissionBuilder plugin={plugin} state={editPermissionState} onChange={setEditPermissionState} />
       </Modal>
 
-      <Toast message={toastMessage} tone={toastTone} />
+          <Toast message={toastMessage} tone={toastTone} />
+        </>
+      )}
     </div>
   )
 }
