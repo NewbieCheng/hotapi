@@ -277,7 +277,7 @@ export default async function handler(req, res) {
   }
 
   const ipHash = hashIp(clientIp(req));
-  const note = [
+  const auditNote = [
     'skillhub',
     resolved.package.packageId,
     new Date().toISOString(),
@@ -285,7 +285,6 @@ export default async function handler(req, res) {
     consumed.orderRef ? `order=${consumed.orderRef}` : null,
     `jti=${consumed.jti}`
   ].filter(Boolean).join('|');
-  row.note = note.slice(0, 500);
 
   try {
     const existing = await findExistingKeys([row.key]);
@@ -299,7 +298,7 @@ export default async function handler(req, res) {
     const { data, error } = await getSupabase()
       .from('activation_keys')
       .insert([row])
-      .select('key, duration_days, permissions, note')
+      .select('key, duration_days, permissions')
       .single();
 
     if (error) {
@@ -313,6 +312,7 @@ export default async function handler(req, res) {
       jti: consumed.jti,
       orderRef: consumed.orderRef,
       ipHash,
+      auditNote,
       dailyCount: quota.count,
       dailyLimit: quota.limit || DEFAULT_DAILY_ISSUE_LIMIT
     });

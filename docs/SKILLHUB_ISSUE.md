@@ -71,10 +71,8 @@ Content-Type: application/json
 - IP（issue）：每 3 分钟 10 次
 - 全局日配额：默认 200（`SKILLHUB_ISSUE_DAILY_LIMIT`）
 
-成功发码会：
-
-- 写 stdout 审计 JSON（`type=skillhub_issue_audit`）
-- 在 `activation_keys.note` 写入 `skillhub|packageId|iso|ip=…|jti=…`
+成功发码会写 stdout 审计 JSON（`type=skillhub_issue_audit`，含 packageId / jti / ipHash / orderRef）。
+当前 `activation_keys` 表无 `note` 列，审计不落库；误发码可在管理端按 key 前缀与创建时间筛选后批量删除。
 
 ## Skill 包
 
