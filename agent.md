@@ -1,6 +1,6 @@
 # 中转站 API - Agent 导航文档
 
-> Vercel 部署的 API 中转站 + 双插件激活码管理  
+> Vercel 部署的 API 中转站 + 四插件激活码管理 + SkillHub 公开发码  
 > 生产域名示例：`https://abc.no996ai.cn`
 
 ---
@@ -22,8 +22,13 @@
 │   ├── activation_cjzs.js   # 采集助手客户端（加密 activate/verify）
 │   ├── activation_zhiliao.js # 知聊桌面端（加密 activate/verify）
 │   ├── activation_zhixiao.js # 知销桌面端（加密 activate/verify）
+│   ├── skillhub_issue.js    # SkillHub 对外售卖发码（mint_token + issue）
+│   ├── _activation_issue.js # 固定套餐 / 发码行构建
+│   ├── _skillhub_issue_token.js # 一次性发码凭证 / 日配额
 │   ├── proxy.js             # 搜索 API 中转
 │   └── cache_system.js      # Redis 缓存 / 限流
+├── skills/
+│   └── plugin-activation-issuer/  # SkillHub 上传包（SKILL.md + scripts）
 └── sql/
     └── 20260430_add_activation_permissions.sql
 ```
@@ -40,6 +45,8 @@
 | `/api/activation_cjzs` | `api/activation_cjzs.js` | **采集助手 CJZS** 激活（AES 加密响应） |
 | `/api/activation_zhiliao` | `api/activation_zhiliao.js` | **知聊** 桌面端激活（AES 加密响应） |
 | `/api/activation_zhixiao` | `api/activation_zhixiao.js` | **知销** 桌面端激活（AES 加密响应） |
+| `/api/skillhub_issue` | `api/skillhub_issue.js` | **SkillHub 对外发码**：`mint_token`（服务端密钥）+ `issue`（一次性 `x-issue-token`） |
+| `/api/skill_activation` | `api/skill_activation.js` | HGD1/HGL1 Skill 许可证签发（管理端，与插件激活码无关） |
 | `/admin` | `admin.html` | 激活码管理 UI |
 
 配置见 [`vercel.json`](vercel.json)。
@@ -191,7 +198,9 @@ Response: { e, i }
 | `SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_URL` | Supabase 项目 URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | 服务端读写 `activation_keys` |
 | `ADMIN_PASSWORD` | admin.html 管理密钥 |
-| `REDIS_URL` | 限流 / 缓存（可选） |
+| `SKILLHUB_ISSUE_API_KEY` | SkillHub 发码签名密钥（仅 `mint_token` / 运营中继；勿给买家） |
+| `SKILLHUB_ISSUE_DAILY_LIMIT` | 可选，UTC 日全局发码上限（默认 200） |
+| `REDIS_URL` | 限流 / 缓存 / issue_token 防重放（可选） |
 | `ACTIVATION_CJZS_INCLUDE_PERMISSIONS_DEFAULT` | CJZS 默认是否下发权限 |
 | `ACTIVATION_DESKTOP_INCLUDE_PERMISSIONS_DEFAULT` | 知聊/知销 默认是否下发 `p` |
 | R2 相关 | FlowX 版本更新（`activation_v2` check_update） |
@@ -228,6 +237,7 @@ Response: { e, i }
 | FlowX 客户端激活逻辑 | `api/activation_v2.js` + `my-new-plugin` |
 | CJZS 客户端激活逻辑 | `api/activation_cjzs.js` + `03d-cjzs-activation.js` |
 | 双插件共享规则 | `api/_activation_core.js` |
+| SkillHub 对外发码 | `api/skillhub_issue.js` + `api/_activation_issue.js` + `api/_skillhub_issue_token.js` + `skills/plugin-activation-issuer/` |
 | 新增 DB 字段 | `sql/` 迁移 + 三处 activation 读写 |
 | 部署路由 | `vercel.json` |
 
@@ -240,4 +250,6 @@ Response: { e, i }
 | 文档 | 内容 |
 |------|------|
 | [API_DOC.md](API_DOC.md) | proxy 搜索、CJZS 客户端、管理端 action |
+| [docs/SKILLHUB_ISSUE.md](docs/SKILLHUB_ISSUE.md) | SkillHub 对外发码 API、四套餐、上传与密钥轮换 |
+| [docs/SKILL_ACTIVATION_ADMIN.md](docs/SKILL_ACTIVATION_ADMIN.md) | HGD1/HGL1 Skill 许可证（另一条线） |
 | [03-vip-and-auth.md](../dbichmdlbjdeplpkhcejgkakobjbjalc/dbichmdlbjdeplpkhcejgkakobjbjalc/3.2.5_0/03-vip-and-auth.md) | 采集助手 VIP 体系（扩展侧） |

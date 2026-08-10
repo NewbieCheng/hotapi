@@ -34,6 +34,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/skillhub_issue.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "admin-ui/dist/**",
       "use": "@vercel/static"
     },
@@ -119,6 +123,17 @@
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
         "Access-Control-Allow-Headers": "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Admin-Auth",
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "src": "/api/skillhub_issue",
+      "dest": "/api/skillhub_issue.js",
+      "headers": {
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,OPTIONS,POST",
+        "Access-Control-Allow-Headers": "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Skill-Api-Key, X-Issue-Token",
         "Cache-Control": "no-store"
       }
     },

@@ -19,3 +19,4 @@ local-server.js
 *.tmp
 *.bak
 *.swp
+skills/dist/
