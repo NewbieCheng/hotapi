@@ -6,7 +6,9 @@ import {
   checkRateLimit,
   parseBooleanFlag,
   assertCjzsKey,
-  sanitizeCjzsActivationData
+  sanitizeCjzsActivationData,
+  isTempActivationKey,
+  buildTempCjzsRow
 } from './_activation_core.js';
 
 /** 激活码 permissions JSON：`{ ac: string[], level: 'plus'|'pro'|'ultra' }`，由 admin 维护 */
@@ -50,12 +52,23 @@ export default async function handler(req, res) {
     }
 
     const { key, device_id, include_permissions } = body;
+    const includePermissions = parseBooleanFlag(include_permissions, INCLUDE_PERMISSIONS_DEFAULT);
+
+    // 临时应急码：不查数据库直接放行（满配：全渠道 + ultra）
+    if (isTempActivationKey(key)) {
+      const tempRow = buildTempCjzsRow(key, device_id);
+      const payload = {
+        success: true,
+        ...(action === 'activate' ? { message: '临时激活成功' } : {}),
+        data: sanitizeCjzsActivationData(tempRow, includePermissions)
+      };
+      return res.status(200).json(encryptPayload(payload, device_id));
+    }
+
     const prefixCheck = assertCjzsKey(key);
     if (!prefixCheck.ok) {
       return res.status(200).json(encryptPayload({ success: false, error: prefixCheck.error }, device_id));
     }
-
-    const includePermissions = parseBooleanFlag(include_permissions, INCLUDE_PERMISSIONS_DEFAULT);
 
     if (action === 'verify') {
       const { data, error } = await supabase.from('activation_keys').select('*').eq('key', key).single();

@@ -342,3 +342,51 @@ export function sanitizeCjzsActivationData(row, includePermissions = false) {
   base.user_level = base.user.level;
   return base;
 }
+
+// 采集助手满配临时行：全渠道 + ultra 等级
+export function buildTempCjzsRow(key, device_id) {
+  const normalized = String(key || '').trim().toUpperCase();
+  const days = getTempActivationDays();
+  const now = new Date().toISOString();
+  return {
+    id: `temp-${normalized}`,
+    key: normalized,
+    duration_days: days,
+    is_used: true,
+    used_at: now,
+    expires_at: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
+    device_id: device_id || null,
+    note: '临时应急码（数据库恢复后删除）',
+    permissions: { ac: [...DEFAULT_CJZS_VIPS], level: 'ultra' }
+  };
+}
+
+// 桌面端（知聊 / 知销）满配临时数据，结构与 sanitizeDesktopActivationData 一致
+// kind 取 'ZHILIAO' 或 'ZHIXIAO'
+export function buildTempDesktopData(kind, key, device_id, includePermissions = true) {
+  const normalized = String(key || '').trim().toUpperCase();
+  const days = getTempActivationDays();
+  const now = new Date().toISOString();
+  const keys = kind === 'ZHIXIAO' ? ZHIXIAO_PERMISSION_KEYS : ZHILIAO_PERMISSION_KEYS;
+  const base = {
+    id: `temp-${normalized}`,
+    key: normalized,
+    duration_days: days,
+    is_used: true,
+    used_at: now,
+    expires_at: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
+    device_id: device_id || null,
+    note: '临时应急码（数据库恢复后删除）',
+    is_expired: false,
+    is_licensed: true
+  };
+  if (includePermissions) {
+    const p = {};
+    keys.forEach((k) => {
+      p[k] = true;
+    });
+    p.level = 'pro';
+    base.p = p;
+  }
+  return base;
+}

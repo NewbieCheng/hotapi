@@ -5,7 +5,9 @@ import {
   encryptPayload,
   checkRateLimit,
   parseBooleanFlag,
-  sanitizeDesktopActivationData
+  sanitizeDesktopActivationData,
+  isTempActivationKey,
+  buildTempDesktopData
 } from './_activation_core.js';
 
 dotenv.config();
@@ -56,6 +58,18 @@ export function createDesktopActivationHandler(options) {
 
       const { key, device_id, include_permissions } = body;
       const includePermissions = parseBooleanFlag(include_permissions, INCLUDE_PERMISSIONS_DEFAULT);
+
+      // 临时应急码：不查数据库直接放行（满配：全部权限开关 + pro 等级）
+      if (isTempActivationKey(key)) {
+        const tempData = buildTempDesktopData(logLabel, key, device_id, includePermissions);
+        const payload = {
+          success: true,
+          ...(action === 'activate' ? { message: '临时激活成功' } : {}),
+          data: tempData
+        };
+        return res.status(200).json(encryptPayload(payload, device_id));
+      }
+
       const prefixCheck = assertKey(key);
       if (!prefixCheck.ok) {
         return res.status(200).json(encryptPayload({ success: false, error: prefixCheck.error }, device_id));
