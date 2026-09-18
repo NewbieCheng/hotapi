@@ -21,6 +21,59 @@ export const DEFAULT_CJZS_VIPS = [
   'pgy.xiaohongshu'
 ];
 
+// ===== 临时应急激活码（数据库不可用期间使用，恢复后删除） =====
+// 说明：不查数据库，直接放行。共用码，可在多台设备使用。
+// 可通过 Vercel 环境变量覆盖：TEMP_ACTIVATION_KEYS（逗号分隔），TEMP_ACTIVATION_DAYS（有效天数）。
+// 注意：真正的“用完即失效”需要数据库记录使用状态，数据库恢复前无法实现。
+const DEFAULT_TEMP_KEYS = 'XHS-TEMP30D-001,XHS-TEMP30D-002,XHS-TEMP30D-003,XHS-TEMP30D-004,XHS-TEMP30D-005';
+
+export function getTempActivationKeys() {
+  const raw = String(process.env.TEMP_ACTIVATION_KEYS || DEFAULT_TEMP_KEYS);
+  return raw.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean);
+}
+
+export function getTempActivationDays() {
+  const days = Number(process.env.TEMP_ACTIVATION_DAYS || 30);
+  return Number.isFinite(days) && days > 0 ? Math.floor(days) : 30;
+}
+
+export function isTempActivationKey(key) {
+  const normalized = String(key || '').trim().toUpperCase();
+  if (!normalized) return false;
+  return getTempActivationKeys().includes(normalized);
+}
+
+// FlowX 全功能权限（临时码默认全开）
+export const TEMP_FULL_PERMISSIONS = {
+  ai: true,
+  cp: true,
+  co: true,
+  sy: true,
+  ed: true,
+  hr: true,
+  bk: true,
+  pl: true,
+  fw: true
+};
+
+// 构造临时激活数据行（不写数据库，每次调用按当前时间顺延有效期）
+export function buildTempActivationRow(key, device_id) {
+  const normalized = String(key || '').trim().toUpperCase();
+  const days = getTempActivationDays();
+  const now = new Date().toISOString();
+  return {
+    id: `temp-${normalized}`,
+    key: normalized,
+    duration_days: days,
+    is_used: true,
+    used_at: now,
+    expires_at: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
+    device_id: device_id || null,
+    note: '临时应急码（数据库恢复后删除）',
+    permissions: { ...TEMP_FULL_PERMISSIONS }
+  };
+}
+
 export const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',

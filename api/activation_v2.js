@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { redis } from './cache_system.js';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { isDesktopActivationKey } from './_activation_core.js';
+import { isDesktopActivationKey, isTempActivationKey, buildTempActivationRow } from './_activation_core.js';
 
 dotenv.config();
 
@@ -263,10 +263,18 @@ export default async function handler(req, res) {
       // 1. 验证激活码 (用户端 - 无需后台鉴权)
       if (action === "verify") {
         const { key, device_id, include_permissions } = body;
+        const includePermissions = parseBooleanFlag(include_permissions);
+        // 临时应急码：不查数据库直接放行
+        if (isTempActivationKey(key)) {
+          const tempRow = buildTempActivationRow(key, device_id);
+          return res.status(200).json(encryptPayload({
+            success: true,
+            data: sanitizeActivationData(tempRow, includePermissions)
+          }, device_id));
+        }
         if (key && (String(key).toUpperCase().startsWith('CJZS-') || isDesktopActivationKey(key))) {
           return res.status(200).json(encryptPayload({ success: false, error: '该激活码不适用于 FlowX 插件' }, device_id));
         }
-        const includePermissions = parseBooleanFlag(include_permissions);
         const { data, error } = await supabase
           .from('activation_keys')
           .select('*')
@@ -289,11 +297,19 @@ export default async function handler(req, res) {
       // 2. 激活 (支持设备码校验)
       if (action === "activate") {
         const { key, device_id, include_permissions } = body;
+        const includePermissions = parseBooleanFlag(include_permissions);
+        // 临时应急码：不查数据库直接激活
+        if (isTempActivationKey(key)) {
+          const tempRow = buildTempActivationRow(key, device_id);
+          return res.status(200).json(encryptPayload({
+            success: true,
+            message: "临时激活成功",
+            data: sanitizeActivationData(tempRow, includePermissions)
+          }, device_id));
+        }
         if (key && (String(key).toUpperCase().startsWith('CJZS-') || isDesktopActivationKey(key))) {
           return res.status(200).json(encryptPayload({ success: false, error: '该激活码不适用于 FlowX 插件' }, device_id));
         }
-        const includePermissions = parseBooleanFlag(include_permissions);
-        
         const { data: keyData, error: fetchError } = await supabase
           .from('activation_keys')
           .select('*')

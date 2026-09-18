@@ -11,6 +11,8 @@ import {
   assertZhiliaoKey,
   assertZhixiaoKey,
   buildPhoneActivationKey,
+  buildTempActivationRow,
+  isTempActivationKey,
   normalizeCjzsLevel,
   normalizeZhiliaoPermissions,
   normalizeZhixiaoPermissions
@@ -26,7 +28,14 @@ if (!supabaseUrl || !supabaseKey) {
   console.error('Supabase configuration missing');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Supabase configuration missing (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
+  }
+  return createClient(url, key);
+}
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -298,6 +307,30 @@ export default async function handler(req, res) {
       }
     }
 
+    // 临时应急码：不依赖数据库，直接放行（数据库故障期间保证用户可用）
+    if (req.method === "POST" && (action === "verify" || action === "activate")) {
+      let tempBody = null;
+      try {
+        tempBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      } catch {
+        tempBody = null;
+      }
+      if (tempBody && isTempActivationKey(tempBody.key)) {
+        const tempRow = buildTempActivationRow(tempBody.key, tempBody.device_id);
+        if (action === "verify") return res.status(200).json(tempRow);
+        return res.status(200).json({ message: "临时激活成功", data: tempRow });
+      }
+    }
+
+    // 数据库客户端延迟初始化：避免模块加载期缺少环境变量直接崩溃（无 JSON 的 500）
+    let supabase;
+    try {
+      supabase = getSupabase();
+    } catch (dbConfigError) {
+      console.error('[API] Supabase config error:', dbConfigError.message);
+      return res.status(500).json({ error: "数据库配置缺失", details: dbConfigError.message });
+    }
+
     if (req.method === "POST") {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
@@ -520,26 +553,50 @@ export default async function handler(req, res) {
         const from = (page - 1) * pageSize;
         const to = from + pageSize - 1;
 
-        let usedQuery = supabase.from('activation_keys').select('*', { count: 'exact', head: true }).eq('is_used', true);
-        let unusedQuery = supabase.from('activation_keys').select('*', { count: 'exact', head: true }).eq('is_used', false);
+        let usedQuery = supabase.from('activation_keys').select('id', { count: 'exact', head: true }).eq('is_used', true);
+        let unusedQuery = supabase.from('activation_keys').select('id', { count: 'exact', head: true }).eq('is_used', false);
         usedQuery = applyPluginFilter(usedQuery, plugin);
         unusedQuery = applyPluginFilter(unusedQuery, plugin);
         usedQuery = applyListFilters(usedQuery, filterParams);
         unusedQuery = applyListFilters(unusedQuery, filterParams);
 
-        const [mainResult, usedResult, unusedResult] = await Promise.all([
-          query.range(from, to),
-          usedQuery,
-          unusedQuery
-        ]);
+        // 主查询先行：统计查询失败不再拖垮整个列表（flowx 的三重 NOT ILIKE 全表扫描最容易超时）
+        const mainResult = await query.range(from, to);
 
-        if (mainResult.error) return res.status(500).json({ error: "获取列表失败", details: mainResult.error.message });
+        if (mainResult.error) {
+          console.error('[API list] main query failed:', {
+            message: mainResult.error.message,
+            details: mainResult.error.details,
+            hint: mainResult.error.hint,
+            code: mainResult.error.code,
+            plugin,
+            page,
+            pageSize
+          });
+          return res.status(500).json({ error: "获取列表失败", details: mainResult.error.message });
+        }
+
+        const [usedSettled, unusedSettled] = await Promise.allSettled([usedQuery, unusedQuery]);
+        const usedCount = usedSettled.status === 'fulfilled' ? (usedSettled.value.count || 0) : 0;
+        const unusedCount = unusedSettled.status === 'fulfilled' ? (unusedSettled.value.count || 0) : 0;
+        if (usedSettled.status === 'rejected') {
+          console.error('[API list] used-count query failed (ignored):', usedSettled.reason?.message || usedSettled.reason);
+        }
+        if (unusedSettled.status === 'rejected') {
+          console.error('[API list] unused-count query failed (ignored):', unusedSettled.reason?.message || unusedSettled.reason);
+        }
+        if (usedSettled.status === 'fulfilled' && usedSettled.value.error) {
+          console.error('[API list] used-count query error (ignored):', usedSettled.value.error.message);
+        }
+        if (unusedSettled.status === 'fulfilled' && unusedSettled.value.error) {
+          console.error('[API list] unused-count query error (ignored):', unusedSettled.value.error.message);
+        }
 
         return res.status(200).json({
           data: mainResult.data,
           total: mainResult.count,
-          used: usedResult.count || 0,
-          unused: unusedResult.count || 0,
+          used: usedCount,
+          unused: unusedCount,
           page,
           pageSize,
           plugin
@@ -565,6 +622,7 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: "Invalid action or method" });
   } catch (err) {
+    console.error('[API] unhandled error:', err?.message, err?.stack);
     return res.status(500).json({ error: "Internal Server Error", message: err.message });
   }
 }

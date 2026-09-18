@@ -40,7 +40,8 @@ async function request<T>(
   const response = await fetch(`${base}${path}`, { ...options, headers })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error || data.message || `请求失败 (${response.status})`)
+    const detail = data.details || data.message
+    throw new Error(detail ? `${data.error || '请求失败'} (${response.status}): ${detail}` : (data.error || `请求失败 (${response.status})`))
   }
   return data as T
 }
