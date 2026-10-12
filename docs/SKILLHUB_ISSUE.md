@@ -39,6 +39,7 @@ REDIS_URL=...                        # 强烈建议：token 防重放与日配�
 | packageId | plugin | 天数 |
 |-----------|--------|------|
 | `flowx-30d` | flowx | 30 |
+| `flowx-365d` | flowx | 365 |
 | `cjzs-30d` | cjzs | 30 |
 | `zhiliao-30d` | zhiliao | 30 |
 | `zhixiao-30d` | zhixiao | 30 |

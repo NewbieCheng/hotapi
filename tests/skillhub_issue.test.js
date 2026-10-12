@@ -35,17 +35,17 @@ function mockResponse() {
   };
 }
 
-test('listSkillhubPackages covers four fixed packages', () => {
+test('listSkillhubPackages covers the fixed packages', () => {
   const list = listSkillhubPackages();
-  assert.equal(list.length, 4);
+  assert.equal(list.length, 5);
   assert.deepEqual(
     list.map((p) => p.packageId).sort(),
-    ['cjzs-30d', 'flowx-30d', 'zhiliao-30d', 'zhixiao-30d']
+    ['cjzs-30d', 'flowx-30d', 'flowx-365d', 'zhiliao-30d', 'zhixiao-30d']
   );
   for (const item of list) {
-    assert.equal(item.duration_days, 30);
     assert.ok(SKILLHUB_PACKAGES[item.packageId]);
   }
+  assert.equal(SKILLHUB_PACKAGES['flowx-365d'].duration_days, 365);
 });
 
 test('resolveSkillhubPackage rejects unknown id', () => {
@@ -61,6 +61,11 @@ test('buildIssueRow prefixes and phone rules', () => {
   assert.match(flowx.key, /^XHS-/);
   assert.equal(flowx.duration_days, 30);
   assert.ok(flowx.permissions?.ai === true);
+
+  const flowxYear = buildIssueRow({ package: SKILLHUB_PACKAGES['flowx-365d'] });
+  assert.match(flowxYear.key, /^XHS-/);
+  assert.equal(flowxYear.duration_days, 365);
+  assert.ok(flowxYear.permissions?.ai === true);
 
   const cjzs = buildIssueRow({ package: SKILLHUB_PACKAGES['cjzs-30d'] });
   assert.match(cjzs.key, /^CJZS-/);
@@ -118,7 +123,7 @@ test('GET packages does not require API key', async () => {
     res
   );
   assert.equal(res.statusCode, 200);
-  assert.equal(res.body.packages.length, 4);
+  assert.equal(res.body.packages.length, 5);
   assert.equal(res.body.limits.perKeyPerHour, 60);
   assert.ok(res.body.limits.dailyIssueLimit >= 1);
   assert.equal(res.body.auth.issue.includes('x-issue-token'), true);

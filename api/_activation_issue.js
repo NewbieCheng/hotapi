@@ -32,6 +32,15 @@ export const SKILLHUB_PACKAGES = Object.freeze({
     permissions: Object.freeze({ ...FLOWX_DEFAULT_PERMISSIONS }),
     allowPhone: false
   }),
+  'flowx-365d': Object.freeze({
+    packageId: 'flowx-365d',
+    plugin: 'flowx',
+    displayName: 'FlowX（今天不加班）365 天',
+    duration_days: 365,
+    prefix: 'XHS',
+    permissions: Object.freeze({ ...FLOWX_DEFAULT_PERMISSIONS }),
+    allowPhone: false
+  }),
   'cjzs-30d': Object.freeze({
     packageId: 'cjzs-30d',
     plugin: 'cjzs',
