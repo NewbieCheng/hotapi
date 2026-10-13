@@ -41,6 +41,7 @@ REDIS_URL=...                        # 强烈建议：token 防重放与日配�
 | `flowx-30d` | flowx | 30 |
 | `flowx-365d` | flowx | 365 |
 | `cjzs-30d` | cjzs | 30 |
+| `cjzs-365d` | cjzs | 365 |
 | `zhiliao-30d` | zhiliao | 30 |
 | `zhixiao-30d` | zhixiao | 30 |
 

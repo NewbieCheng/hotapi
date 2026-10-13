@@ -53,6 +53,18 @@ export const SKILLHUB_PACKAGES = Object.freeze({
     }),
     allowPhone: false
   }),
+  'cjzs-365d': Object.freeze({
+    packageId: 'cjzs-365d',
+    plugin: 'cjzs',
+    displayName: '知源采集助手 365 天',
+    duration_days: 365,
+    prefix: 'CJZS',
+    permissions: Object.freeze({
+      ac: Object.freeze([...DEFAULT_CJZS_VIPS]),
+      level: 'plus'
+    }),
+    allowPhone: false
+  }),
   'zhiliao-30d': Object.freeze({
     packageId: 'zhiliao-30d',
     plugin: 'zhiliao',

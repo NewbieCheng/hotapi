@@ -7,6 +7,7 @@
 | `flowx-30d` | FlowX（今天不加班） | 30 | `XHS-…` | 不支持 |
 | `flowx-365d` | FlowX（今天不加班） | 365 | `XHS-…` | 不支持 |
 | `cjzs-30d` | 知源采集助手 | 30 | `CJZS-` | 不支持 |
+| `cjzs-365d` | 知源采集助手 | 365 | `CJZS-` | 不支持 |
 | `zhiliao-30d` | 知聊 | 30 | `ZHILIAO-` | 可选 |
 | `zhixiao-30d` | 知销 | 30 | `ZHIXIAO-` | 可选 |
 
