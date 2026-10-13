@@ -217,7 +217,7 @@ function assertPluginKey(plugin, key) {
   return assertFlowxKey(key);
 }
 
-async function findExistingKeys(keys) {
+async function findExistingKeys(supabase, keys) {
   const unique = [...new Set(keys.filter(Boolean))];
   if (!unique.length) return [];
   const { data, error } = await supabase.from('activation_keys').select('key').in('key', unique);
@@ -422,7 +422,7 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: err.message || '创建参数无效' });
         }
 
-        const existing = await findExistingKeys(keysToInsert.map((item) => item.key));
+        const existing = await findExistingKeys(supabase, keysToInsert.map((item) => item.key));
         if (existing.length) {
           return res.status(409).json({
             error: '部分激活码已存在',
